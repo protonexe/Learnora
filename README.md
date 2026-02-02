@@ -2,7 +2,7 @@
 
 A modern, mobile-friendly educational platform with multi-role support for Students, Teachers, and Parents.
 
-[![Playwright Tests](https://github.com/protonexe/learnora/actions/workflows/playwright.yml/badge.svg)](https://github.com/yourusername/learnora/actions/workflows/playwright.yml)
+[![Playwright Tests](https://github.com/protonexe/learnora/actions/workflows/playwright.yml/badge.svg)](https://github.com/protonexe/learnora/actions/workflows/playwright.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
