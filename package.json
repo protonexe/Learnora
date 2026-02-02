@@ -3,21 +3,12 @@
   "version": "1.0.0",
   "description": "Smart Education Platform - Mobile-Friendly Learning App",
   "scripts": {
-    "dev": "http-server -p 5500 -o",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed",
-    "test:mobile": "playwright test --grep @mobile",
-    "test:critical": "playwright test --grep @critical",
-    "test:debug": "playwright test --debug",
-    "test:report": "playwright show-report",
-    "test:codegen": "playwright codegen http://127.0.0.1:5500"
+    "dev": "http-server -p 5500 -o"
   },
   "keywords": ["education", "learning", "pwa", "mobile"],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
     "http-server": "^14.1.1"
   }
 }
