@@ -2,7 +2,6 @@
 
 A modern, mobile-friendly educational platform with multi-role support for Students, Teachers, and Parents.
 
-[![Playwright Tests](https://github.com/protonexe/learnora/actions/workflows/playwright.yml/badge.svg)](https://github.com/protonexe/learnora/actions/workflows/playwright.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
@@ -43,8 +42,7 @@ cd learnora
 # Install dependencies
 npm install
 
-# Install Playwright browsers (for testing)
-npx playwright install
+
 ```
 
 ### Running the App
@@ -55,22 +53,6 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:5500`
-
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run with UI for debugging
-npm run test:ui
-
-# Run only mobile tests
-npm run test:mobile
-
-# Run only critical tests
-npm run test:critical
-```
 
 ## Demo Credentials
 
@@ -106,10 +88,7 @@ learnora/
 │   ├── hooks/              # Custom hooks
 │   ├── utils/              # Utility functions
 │   └── data/               # Sample data
-├── tests/                  # Playwright E2E tests
-├── .github/workflows/      # CI/CD configuration
-├── package.json            # Dependencies & scripts
-└── playwright.config.js    # Test configuration
+└── package.json            # Dependencies & scripts
 ```
 
 ## Browser Support
@@ -132,7 +111,6 @@ Connect your GitHub repository. No build command needed - set the publish direct
 
 - HTML5/CSS3/JavaScript (ES6+)
 - React (via CDN)
-- Playwright for E2E testing
 - Service Workers for PWA functionality
 - LocalStorage for session management
 
