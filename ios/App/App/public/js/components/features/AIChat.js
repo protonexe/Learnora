@@ -32,7 +32,7 @@ const AIChat = ({ isOpen, onClose }) => {
   const apiConfig = getApiConfig();
   const GEMINI_API_KEY = apiConfig.gemini?.key || "";
   const OPENROUTER_API_KEY = apiConfig.openrouter?.key || "";
-  const DEEPSEEK_MODEL = "deepseek/deepseek-r1-0528:free";
+  const OPENROUTER_MODEL = "openrouter/free";
   const GEMINI_MODEL = "gemini-2.5-flash";
 
   // Save AI provider preference
@@ -226,7 +226,7 @@ const AIChat = ({ isOpen, onClose }) => {
         "X-Title": "Learnora AI Tutor"
       },
       body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
+        model: OPENROUTER_MODEL,
         messages: apiMessages,
         temperature: 0.7,
         max_tokens: 1000

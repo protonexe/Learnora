@@ -26,13 +26,13 @@ const AITutorView = () => {
   
   const getApiConfig = () => window.APP_CONFIG || {
     gemini: { key: "", models: [{ id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }] },
-    openrouter: { key: "", models: [{ id: 'deepseek/deepseek-r1-0528:free', label: 'DeepSeek R1' }] }
+    openrouter: { key: "", models: [{ id: 'openrouter/free', label: 'Free Model' }] }
   };
   const apiConfig = getApiConfig();
   const GEMINI_API_KEY = apiConfig.gemini?.key || "";
   const OPENROUTER_API_KEY = apiConfig.openrouter?.key || "";
   const GEMINI_MODEL = "gemini-2.5-flash";
-  const DEEPSEEK_MODEL = "deepseek/deepseek-r1-0528:free";
+  const OPENROUTER_MODEL = "openrouter/free";
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
   const messages = activeConversation?.messages || [];
@@ -169,7 +169,7 @@ const AITutorView = () => {
         "X-Title": "Learnora AI Tutor"
       },
       body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
+        model: OPENROUTER_MODEL,
         messages: apiMessages,
         temperature: 0.7,
         max_tokens: 1000
