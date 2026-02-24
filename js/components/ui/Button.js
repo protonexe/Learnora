@@ -60,7 +60,13 @@ const Button = ({
 
   return (
     <button 
-      onClick={onClick} 
+      onClick={(e) => {
+        console.log('[BUTTON] Button clicked, type:', props.type || 'not specified');
+        if (onClick) {
+          console.log('[BUTTON] Calling onClick handler');
+          onClick(e);
+        }
+      }}
       disabled={disabled || loading} 
       style={{
         ...baseStyle,

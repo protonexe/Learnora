@@ -13,21 +13,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
-  const [loginError, setLoginError] = React.useState('');
-  const [dbReady, setDbReady] = React.useState(false);
   const { theme, toggleTheme } = useTheme();
-
-  // Wait for database to be ready
-  React.useEffect(() => {
-    const checkDB = () => {
-      if (window.LearnoraDB) {
-        setDbReady(true);
-        return;
-      }
-      setTimeout(checkDB, 200);
-    };
-    checkDB();
-  }, []);
 
   React.useEffect(() => {
     const initNFC = async () => {
@@ -123,28 +109,33 @@ const LoginView = ({ onAuthenticate, showToast }) => {
     }
   };
 
+  const credentials = {
+    student: [
+      { username: 'emma.wilson', password: 'pass123', name: 'Emma Wilson' },
+      { username: 'alex.johnson', password: 'pass123', name: 'Alex Johnson' },
+    ],
+    teacher: [
+      { username: 'mr.johnson', password: 'teacher123', name: 'Mr. Johnson' },
+      { username: 'ms.smith', password: 'teacher123', name: 'Ms. Smith' },
+    ],
+    parent: [
+      { username: 'parent.wilson', password: 'parent123', name: 'John Wilson' },
+    ]
+  };
+
   const roles = [
     { id: 'student', label: 'Student', description: 'Access your courses' },
     { id: 'teacher', label: 'Teacher', description: 'Manage classes' },
     { id: 'parent', label: 'Parent', description: 'Track progress' },
   ];
 
-  const validateCredentials = async (role, user, pass) => {
-    if (!window.LearnoraDB) {
-      throw new Error('Database is still loading. Please wait a moment and try again.');
-    }
-    
-    // Use the proper async database query
-    if (typeof window.LearnoraDB.validateUser === 'function') {
-      return await window.LearnoraDB.validateUser(role, user, pass);
-    }
-    
-    // Fallback: direct data access (LocalDatabase)
-    const allUsers = window.LearnoraDB.data ? window.LearnoraDB.data.users || [] : [];
-    if (allUsers.length === 0) {
-      throw new Error('Database not initialized. Please refresh the page.');
-    }
-    return allUsers.find(cred => cred.role === role && cred.username === user && cred.password === pass) || null;
+  const validateCredentials = (role, user, pass) => {
+    console.log('[LOGIN] validateCredentials called with:', { role, user, passLength: pass?.length });
+    const roleCredentials = credentials[role] || [];
+    console.log('[LOGIN] Found credentials for role:', { role, count: roleCredentials.length, credentials: roleCredentials.map(c => c.username) });
+    const result = roleCredentials.some(cred => cred.username === user && cred.password === pass);
+    console.log('[LOGIN] Validation result:', result);
+    return result;
   };
 
   const enableKioskMode = async (role) => {
@@ -170,42 +161,45 @@ const LoginView = ({ onAuthenticate, showToast }) => {
   };
 
   const handlePasswordLogin = (e) => {
+    console.log('[LOGIN] handlePasswordLogin called');
     e.preventDefault();
-    setLoginError('');
+    console.log('[LOGIN] Event prevented');
 
     if (!username.trim() || !password.trim()) {
-      setLoginError('Please enter both username and password.');
+      console.log('[LOGIN] Form validation failed - empty fields');
       showToast('Please enter username and password', 'warning');
       return;
     }
 
-    if (!dbReady) {
-      setLoginError('Database is still loading. Please wait a moment...');
-      showToast('Database loading, please wait...', 'warning');
-      return;
-    }
-
+    console.log('[LOGIN] Form validation passed, setting isLoading to true');
     setIsLoading(true);
     
+    const checkStart = Date.now();
+    console.log('[LOGIN] Starting async validation at', checkStart);
+    
     setTimeout(async () => {
-      try {
-        const userDoc = await validateCredentials(selectedRole, username, password);
-        if (userDoc) {
-          setLoginError('');
-          await enableKioskMode(selectedRole);
-          onAuthenticate(selectedRole, userDoc);
-          showToast(`Welcome back, ${userDoc.name}!`, 'success');
-          setUsername('');
-          setPassword('');
-        } else {
-          setLoginError(`Invalid credentials for ${selectedRole}. Check your username and password.`);
-          showToast('Invalid username or password', 'error');
-        }
-      } catch (err) {
-        console.error('Login error:', err);
-        setLoginError(err.message || 'Something went wrong. Please try again.');
-        showToast(err.message || 'Login failed', 'error');
+      const elapsedMs = Date.now() - checkStart;
+      console.log('[LOGIN] Async timeout fired after', elapsedMs, 'ms');
+      console.log('[LOGIN] About to validate:', { selectedRole, username, passwordLength: password.length });
+      
+      const isValid = validateCredentials(selectedRole, username, password);
+      console.log('[LOGIN] Validation complete:', isValid);
+      
+      if (isValid) {
+        console.log('[LOGIN] Credentials valid! Enabling kiosk mode for role:', selectedRole);
+        await enableKioskMode(selectedRole);
+        console.log('[LOGIN] Kiosk mode complete, calling onAuthenticate with role:', selectedRole);
+        onAuthenticate(selectedRole);
+        console.log('[LOGIN] onAuthenticate called successfully');
+        showToast(`Welcome back!`, 'success');
+        setUsername('');
+        setPassword('');
+        console.log('[LOGIN] Form cleared');
+      } else {
+        console.log('[LOGIN] Credentials invalid - showing error');
+        showToast('Invalid username or password', 'error');
       }
+      console.log('[LOGIN] Setting isLoading to false');
       setIsLoading(false);
     }, 800);
   };
@@ -370,7 +364,10 @@ const LoginView = ({ onAuthenticate, showToast }) => {
               </div>
             </div>
 
-            <form onSubmit={handlePasswordLogin}>
+            <form onSubmit={(e) => {
+              console.log('[LOGIN] Form onSubmit triggered');
+              handlePasswordLogin(e);
+            }}>
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ 
                   display: 'block', 
@@ -427,60 +424,14 @@ const LoginView = ({ onAuthenticate, showToast }) => {
                 />
               </div>
 
-              {loginError && (
-                <div style={{
-                  padding: '10px 14px',
-                  marginBottom: '12px',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  borderRadius: '8px',
-                  color: '#ef4444',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px'
-                }}>
-                  <span style={{ flexShrink: 0, fontSize: '16px' }}>&#x26A0;</span>
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              {!dbReady && (
-                <div style={{
-                  padding: '10px 14px',
-                  marginBottom: '12px',
-                  background: 'rgba(245, 158, 11, 0.1)',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
-                  borderRadius: '8px',
-                  color: '#f59e0b',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <div style={{
-                    width: '14px',
-                    height: '14px',
-                    border: '2px solid #f59e0b',
-                    borderTopColor: 'transparent',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite',
-                    flexShrink: 0
-                  }} />
-                  <span>Connecting to database...</span>
-                </div>
-              )}
-
               <Button 
                 type="submit"
                 fullWidth
                 loading={isLoading}
-                disabled={isLoading || !dbReady}
+                disabled={isLoading}
                 style={{ marginBottom: '12px' }}
               >
-                {!dbReady ? 'Connecting...' : 'Sign In'}
+                Sign In
               </Button>
 
               <button 

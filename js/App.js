@@ -4,7 +4,6 @@ function LearnoraApp() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [educationMode, setEducationMode] = React.useState(false);
   const [userRole, setUserRole] = useLocalStorage('learnora-role', 'student');
-  const [userId, setUserId] = useLocalStorage('learnora-userid', null);
   const [currentView, setCurrentView] = useLocalStorage('learnora-view', 'dashboard');
   const [notes, setNotes] = useLocalStorage('learnora-notes', []);
   const [streak, setStreak] = useLocalStorage('learnora-streak', { current: 0, longest: 0, lastDate: null });
@@ -40,12 +39,12 @@ function LearnoraApp() {
   }, []);
 
   // ==================== DATA ====================
-  const courses = (window.LearnoraDB && window.LearnoraDB.data.courses) || (typeof SampleData !== 'undefined' ? SampleData.courses : []) || [];
-  const assignments = (window.LearnoraDB && window.LearnoraDB.data.assignments) || (typeof SampleData !== 'undefined' ? SampleData.assignments : []) || [];
-  const stats = (window.LearnoraDB && window.LearnoraDB.data.stats) || (typeof SampleData !== 'undefined' ? SampleData.stats : []) || [];
-  const sampleQuiz = typeof SampleData !== 'undefined' ? SampleData.sampleQuiz : null;
-  const sampleFlashcardDeck = typeof SampleData !== 'undefined' ? SampleData.sampleFlashcardDeck : null;
-  const sampleBook = typeof SampleData !== 'undefined' ? SampleData.sampleBook : null;
+  const courses = SampleData.courses;
+  const assignments = SampleData.assignments;
+  const stats = SampleData.stats;
+  const sampleQuiz = SampleData.sampleQuiz;
+  const sampleFlashcardDeck = SampleData.sampleFlashcardDeck;
+  const sampleBook = SampleData.sampleBook;
 
   // ==================== CALLBACKS ====================
   const showToast = React.useCallback((message, type = 'info') => {
@@ -68,18 +67,20 @@ function LearnoraApp() {
     setLastPosition({ courseId, chapterIndex });
   }, [setLastPosition]);
 
-  const handleAuthenticate = React.useCallback((role = 'student', userDoc = null) => {
+  const handleAuthenticate = React.useCallback((role = 'student') => {
+    console.log('[APP] handleAuthenticate called with role:', role);
     setUserRole(role);
-    if (userDoc) setUserId(userDoc.id);
+    console.log('[APP] setUserRole called');
     setIsAuthenticated(true);
+    console.log('[APP] setIsAuthenticated called');
     setEducationMode(true);
+    console.log('[APP] setEducationMode called, authentication complete');
   }, []);
 
   const handleLogout = React.useCallback(() => {
     setIsAuthenticated(false);
     setEducationMode(false);
     setUserRole('student');
-    setUserId(null);
     showToast('Logged out successfully', 'info');
   }, [showToast]);
 
@@ -261,7 +262,7 @@ function LearnoraApp() {
           isVisible={toast.visible} 
           onClose={() => setToast({ ...toast, visible: false })} 
         />
-        <TeacherPortal userId={userId} onLogout={handleLogout} showToast={showToast} />
+        <TeacherPortal onLogout={handleLogout} showToast={showToast} />
       </>
     );
   }
@@ -276,7 +277,7 @@ function LearnoraApp() {
           isVisible={toast.visible} 
           onClose={() => setToast({ ...toast, visible: false })} 
         />
-        <ParentPortal userId={userId} onLogout={handleLogout} showToast={showToast} />
+        <ParentPortal onLogout={handleLogout} showToast={showToast} />
       </>
     );
   }
