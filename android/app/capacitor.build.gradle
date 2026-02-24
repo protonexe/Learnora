@@ -7,8 +7,15 @@ android {
   }
 }
 
+apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
     implementation project(':capacitor-keyboard')
     implementation project(':capacitor-splash-screen')
     implementation project(':capacitor-status-bar')
+
+}
+
+
+if (hasProperty('postBuildExtras')) {
+  postBuildExtras()
 }

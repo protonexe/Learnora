@@ -28,12 +28,17 @@
 	},
 	"android": {
 		"allowMixedContent": true,
-		"backgroundColor": "#0c0f1a"
+		"backgroundColor": "#0c0f1a",
+		"webContentsDebuggingEnabled": false,
+		"initialFocus": false,
+		"overrideUserAgent": "",
+		"appendUserAgent": "Learnora/1.0"
 	},
 	"ios": {
 		"contentInset": "automatic",
 		"allowsLinkPreview": false,
-		"scrollEnabled": true
+		"scrollEnabled": true,
+		"preferredContentMode": "mobile"
 	},
 	"packageClassList": [
 		"KeyboardPlugin",

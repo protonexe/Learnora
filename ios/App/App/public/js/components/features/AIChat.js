@@ -25,8 +25,13 @@ const AIChat = ({ isOpen, onClose }) => {
   };
   
   // API Keys
-  const GEMINI_API_KEY = "AIzaSyAQTR2WieTaYAB-fm93IoKaC0qh3ByX1Ec";
-  const OPENROUTER_API_KEY = "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";
+  const getApiConfig = () => window.APP_CONFIG || {
+    gemini: { key: "" },
+    openrouter: { key: "" }
+  };
+  const apiConfig = getApiConfig();
+  const GEMINI_API_KEY = apiConfig.gemini?.key || "";
+  const OPENROUTER_API_KEY = apiConfig.openrouter?.key || "";
   const DEEPSEEK_MODEL = "deepseek/deepseek-r1-0528:free";
   const GEMINI_MODEL = "gemini-2.5-flash";
 

@@ -22,20 +22,23 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenAIChat }) => 
       />
 
       {/* Sidebar */}
-      <nav style={{
-        position: 'fixed',
-        top: isMobile ? '56px' : '72px',
-        left: 0,
-        width: isMobile ? '260px' : '280px',
-        height: isMobile ? 'calc(100vh - 56px)' : 'calc(100vh - 72px)',
-        background: 'var(--bg-secondary)',
-        borderRight: '1px solid var(--border-color)',
-        boxShadow: 'var(--shadow-xl)',
-        zIndex: 99,
-        padding: isMobile ? '16px 12px' : '24px 16px',
-        overflowY: 'auto',
-        animation: 'slideInLeft 0.3s ease'
-      }}>
+      <nav 
+        className="sidebar"
+        style={{
+          position: 'fixed',
+          top: isMobile ? '56px' : '72px',
+          left: 0,
+          width: isMobile ? '260px' : '280px',
+          height: isMobile ? 'calc(100vh - 56px)' : 'calc(100vh - 72px)',
+          background: 'var(--bg-secondary)',
+          borderRight: '1px solid var(--border-color)',
+          boxShadow: 'var(--shadow-xl)',
+          zIndex: 99,
+          padding: isMobile ? '16px 12px' : '24px 16px',
+          overflowY: 'auto',
+          animation: 'slideInLeft 0.3s ease'
+        }}
+      >
         <p style={{
           fontSize: '11px',
           fontWeight: '700',

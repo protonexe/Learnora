@@ -78,6 +78,16 @@ const DemoCredentials = {
       children: ['Sarah Smith'],
       email: 'mike.brown@email.com'
     }
+  ],
+
+  // ==================== ADMINS ====================
+  admins: [
+    {
+      username: 'admin',
+      password: 'admin123',
+      name: 'System Admin',
+      email: 'admin@learnora.com'
+    }
   ]
 };
 

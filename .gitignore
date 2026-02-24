@@ -35,6 +35,9 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
+# Config (contains API keys - copy from config.js.example)
+# config.js
+
 # Coverage
 coverage/
 *.lcov
@@ -66,6 +69,7 @@ ios/capacitor-cordova-ios-plugins/
 
 # Misc
 *.bak
+*.backup*
 *.tmp
 *.temp
 .cache

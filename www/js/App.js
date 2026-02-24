@@ -68,9 +68,13 @@ function LearnoraApp() {
   }, [setLastPosition]);
 
   const handleAuthenticate = React.useCallback((role = 'student') => {
+    console.log('[APP] handleAuthenticate called with role:', role);
     setUserRole(role);
+    console.log('[APP] setUserRole called');
     setIsAuthenticated(true);
+    console.log('[APP] setIsAuthenticated called');
     setEducationMode(true);
+    console.log('[APP] setEducationMode called, authentication complete');
   }, []);
 
   const handleLogout = React.useCallback(() => {
@@ -129,6 +133,48 @@ function LearnoraApp() {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [parseHash]);
+
+  // Intercept Android hardware back button
+  React.useEffect(() => {
+    if (window.Capacitor && window.Capacitor.Plugins.App) {
+      const { App: CapacitorApp } = window.Capacitor.Plugins;
+      
+      const listener = CapacitorApp.addListener('backButton', async (info) => {
+        // Prevent default back behavior when kiosk is active
+        if (window.NativePlugins) {
+          try {
+            const kiosk = await window.NativePlugins.KioskMode.isActive();
+            if (kiosk && kiosk.active) {
+              // Block back button entirely or only allow it if not at root
+              if (!info.canGoBack || currentView === 'dashboard') {
+                showToast('Action blocked: Device is in Kiosk Mode', 'warning');
+                return; // Consume event
+              }
+            }
+          } catch (e) {
+             console.error('Kiosk check failed', e);
+          }
+        }
+        
+        // Handle normal back navigation
+        if (menuOpen) {
+          setMenuOpen(false);
+        } else if (aiChatOpen) {
+          setAiChatOpen(false);
+        } else if (activeModal) {
+          setActiveModal(null);
+        } else if (currentView === 'course-detail') {
+          handleNavigate('courses');
+        } else if (currentView !== 'dashboard') {
+          handleNavigate('dashboard');
+        } else if (!info.canGoBack) {
+          CapacitorApp.exitApp();
+        }
+      });
+      
+      return () => listener.then(l => l.remove());
+    }
+  }, [currentView, activeModal, aiChatOpen, menuOpen, showToast, handleNavigate]);
   
   // Sync URL on initial load - always use hash, ignore localStorage default
   React.useEffect(() => {
@@ -232,6 +278,21 @@ function LearnoraApp() {
           onClose={() => setToast({ ...toast, visible: false })} 
         />
         <ParentPortal onLogout={handleLogout} showToast={showToast} />
+      </>
+    );
+  }
+
+  // Admin Portal
+  if (userRole === 'admin') {
+    return (
+      <>
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          isVisible={toast.visible} 
+          onClose={() => setToast({ ...toast, visible: false })} 
+        />
+        <AdminPortal onLogout={handleLogout} showToast={showToast} />
       </>
     );
   }

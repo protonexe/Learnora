@@ -10,6 +10,34 @@ const DashboardView = ({
   onOpenAIChat
 }) => {
   const isMobile = window.innerWidth <= 768;
+  const [messages, setMessages] = React.useState([]);
+  const [activeAssignments, setActiveAssignments] = React.useState([]);
+  const [isLoadingDynamic, setIsLoadingDynamic] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchDynamicData = async () => {
+      if (window.LearnoraDB) {
+        // Assume studentId is 'student_0' for demo or get from some state
+        // In a real app we'd have a currentUserId
+        const studentId = 'student_0'; 
+        try {
+          const msgs = await window.LearnoraDB.getMessagesForUser(studentId);
+          const allAssignments = await window.LearnoraDB.getAllAssignments();
+          
+          setMessages(msgs || []);
+          setActiveAssignments(allAssignments || []);
+        } catch (error) {
+          console.error("Failed to fetch dashboard dynamic data:", error);
+        }
+      }
+      setIsLoadingDynamic(false);
+    };
+    fetchDynamicData();
+  }, []);
+
+  // Defensive guards - prevent crash if data isn't loaded yet
+  const safeStats = stats || [];
+  const safeCourses = courses || [];
 
   const [showWelcome, setShowWelcome] = React.useState(() => {
     const saved = localStorage.getItem('learnora-show-welcome');
@@ -21,9 +49,9 @@ const DashboardView = ({
     localStorage.setItem('learnora-show-welcome', 'false');
   };
 
-  const inProgressCourses = courses.filter(c => c.progress > 0 && c.progress < 100);
-  const notStartedCourses = courses.filter(c => c.progress === 0);
-  const completedCourses = courses.filter(c => c.progress === 100);
+  const inProgressCourses = safeCourses.filter(c => c.progress > 0 && c.progress < 100);
+  const notStartedCourses = safeCourses.filter(c => c.progress === 0);
+  const completedCourses = safeCourses.filter(c => c.progress === 100);
 
   return (
     <>
@@ -34,7 +62,7 @@ const DashboardView = ({
         marginBottom: isMobile ? '16px' : '24px',
         flexWrap: 'wrap'
       }}>
-        {stats.slice(0, isMobile ? 2 : 4).map((stat, idx) => (
+        {safeStats.slice(0, isMobile ? 2 : 4).map((stat, idx) => (
           <div key={idx} style={{
             flex: isMobile ? '1 1 45%' : '1',
             minWidth: isMobile ? '140px' : '160px',
@@ -240,7 +268,7 @@ const DashboardView = ({
 
       {/* Continue Learning - Last Position */}
       {lastPosition && (() => {
-        const course = courses.find(c => c.id === lastPosition.courseId);
+        const course = safeCourses.find(c => c.id === lastPosition.courseId);
         if (!course) return null;
         return (
           <div style={{
@@ -292,6 +320,48 @@ const DashboardView = ({
         );
       })()}
 
+      {/* Dynamic Content: Messages & Assignments */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '16px' : '24px', marginBottom: '24px' }}>
+        {/* Messages Section */}
+        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Recent Messages</h3>
+            <Badge label={messages.length} color="var(--primary-500)" size="sm" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {messages.length > 0 ? messages.slice(0, 3).map(msg => (
+              <div key={msg.id} style={{ padding: '10px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--primary-500)' }}>
+                <p style={{ fontSize: '13px', margin: '0 0 4px 0', fontWeight: '600' }}>Teacher Message</p>
+                <p style={{ fontSize: '12px', margin: 0, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.content}</p>
+              </div>
+            )) : (
+              <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center', py: '10px' }}>No new messages</p>
+            )}
+          </div>
+        </div>
+
+        {/* Dynamic Assignments Section */}
+        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-xl)', padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>New Assignments</h3>
+            <Badge label={activeAssignments.length} color="#f59e0b" size="sm" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {activeAssignments.length > 0 ? activeAssignments.slice(0, 3).map(assign => (
+              <div key={assign.id} style={{ padding: '10px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ fontSize: '13px', margin: '0 0 2px 0', fontWeight: '600' }}>{assign.title}</p>
+                  <p style={{ fontSize: '11px', margin: 0, color: 'var(--text-tertiary)' }}>Due: {assign.dueDate || assign.due}</p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => onNavigate('assignments')}>View</Button>
+              </div>
+            )) : (
+              <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center', py: '10px' }}>No pending assignments</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Courses Section Header */}
       <div style={{
         display: 'flex',
@@ -334,7 +404,7 @@ const DashboardView = ({
           : 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: isMobile ? '12px' : '16px'
       }}>
-        {courses.map((course, idx) => (
+        {safeCourses.map((course, idx) => (
           <div
             key={course.id}
             onClick={() => onSelectCourse(course)}
