@@ -35,8 +35,12 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
-# Config (contains API keys - copy from config.js.example)
-# config.js
+# Config (contains API keys - never commit)
+config.js
+js/config.js
+www/js/config.js
+public/js/config.js
+ios/App/App/public/js/config.js
 
 # Coverage
 coverage/
