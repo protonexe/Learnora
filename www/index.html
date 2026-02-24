@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="description" content="LEARNORA - Smart Education Platform">
+  
+  <title>LEARNORA - Smart Education Platform</title>
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128218;</text></svg>">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/components.css">
+  
+  <!-- KaTeX for LaTeX math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+  <!-- SPA Redirect Handler -->
+  <script>
+    // Handle redirect from 404.html for SPA routing
+    (function() {
+      var redirect = sessionStorage.redirect;
+      delete sessionStorage.redirect;
+      if (redirect && redirect !== window.location.href) {
+        window.history.replaceState(null, null, redirect);
+      }
+    })();
+  </script>
+
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-content">
+      <div class="loading-logo">&#128218;</div>
+      <h2>LEARNORA</h2>
+      <p>Preparing your learning experience</p>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
+  
+  <div id="root"></div>
+  
+  <!-- React & Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  
+  <!-- Capacitor Core (for native apps) -->
+  <script src="capacitor.js"></script>
+  
+  <!-- Core Utilities (load before any components) -->
+  <script src="js/utils/nfcUtils.js"></script>
+  <script src="js/utils/nativePlugins.js"></script>
+  
+  <!-- App Modules -->
+  <script type="text/babel" src="js/utils/helpers.js"></script>
+  <script type="text/babel" src="js/hooks/useLocalStorage.js"></script>
+  <script type="text/babel" src="js/data/sampleData.js"></script>
+  <script type="text/babel" src="js/data/demoCredentials.js"></script>
+  <script type="text/babel" src="js/contexts/ThemeContext.js"></script>
+  
+  <!-- UI Components -->
+  <script type="text/babel" src="js/components/ui/Icon.js"></script>
+  <script type="text/babel" src="js/components/ui/Button.js"></script>
+  <script type="text/babel" src="js/components/ui/Card.js"></script>
+  <script type="text/babel" src="js/components/ui/Badge.js"></script>
+  <script type="text/babel" src="js/components/ui/ProgressBar.js"></script>
+  <script type="text/babel" src="js/components/ui/Toggle.js"></script>
+  <script type="text/babel" src="js/components/ui/Modal.js"></script>
+  <script type="text/babel" src="js/components/ui/Toast.js"></script>
+  <script type="text/babel" src="js/components/ui/Avatar.js"></script>
+  <script type="text/babel" src="js/components/ui/Input.js"></script>
+  <script type="text/babel" src="js/components/ui/AnimatedCard.js"></script>
+  <script type="text/babel" src="js/components/ui/StatCard.js"></script>
+  
+  <!-- Feature Components -->
+  <script type="text/babel" src="js/components/features/QuizSystem.js"></script>
+  <script type="text/babel" src="js/components/features/FlashcardSystem.js"></script>
+  <script type="text/babel" src="js/components/features/AnalyticsDashboard.js"></script>
+  <script type="text/babel" src="js/components/features/EBookReader.js"></script>
+  <script type="text/babel" src="js/components/features/MindMap.js"></script>
+  <script type="text/babel" src="js/components/features/Onboarding.js"></script>
+  <script type="text/babel" src="js/components/features/AIChat.js"></script>
+  
+  <!-- Layout Components -->
+  <script type="text/babel" src="js/components/layout/Header.js"></script>
+  <script type="text/babel" src="js/components/layout/Sidebar.js"></script>
+  <script type="text/babel" src="js/components/layout/FloatingButton.js"></script>
+  
+  <!-- View Components -->
+  <script type="text/babel" src="js/components/views/Login.js"></script>
+  <script type="text/babel" src="js/components/views/Dashboard.js"></script>
+  <script type="text/babel" src="js/components/views/Courses.js"></script>
+  <script type="text/babel" src="js/components/views/CourseDetail.js"></script>
+  <script type="text/babel" src="js/components/views/Quizzes.js"></script>
+  <script type="text/babel" src="js/components/views/Flashcards.js"></script>
+  <script type="text/babel" src="js/components/views/Analytics.js"></script>
+  <script type="text/babel" src="js/components/views/EBooks.js"></script>
+  <script type="text/babel" src="js/components/views/MindMaps.js"></script>
+  <script type="text/babel" src="js/components/views/Assignments.js"></script>
+  <script type="text/babel" src="js/components/views/Notes.js"></script>
+  <script type="text/babel" src="js/components/views/Settings.js"></script>
+  <script type="text/babel" src="js/components/views/TeacherPortal.js"></script>
+  <script type="text/babel" src="js/components/views/ParentPortal.js"></script>
+  <script type="text/babel" src="js/components/views/AITutor.js"></script>
+  
+  <!-- Main App -->
+  <script type="text/babel" src="js/App.js"></script>
+  
+  <script>
+    if (window.feather) window.feather.replace();
+  </script>
+</body>
+</html>

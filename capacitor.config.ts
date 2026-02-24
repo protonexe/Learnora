@@ -1,0 +1,47 @@
+import { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.learnora.app',
+  appName: 'Learnora',
+  webDir: 'www',
+  bundledWebRuntime: false,
+  server: {
+    androidScheme: 'https',
+    iosScheme: 'https'
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#0c0f1a',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true
+    },
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: '#0c0f1a'
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
+    }
+  },
+  android: {
+    allowMixedContent: true,
+    backgroundColor: '#0c0f1a',
+    webContentsDebuggingEnabled: false,
+    initialFocus: false,
+    overrideUserAgent: '',
+    appendUserAgent: 'Learnora/1.0'
+  },
+  ios: {
+    contentInset: 'automatic',
+    allowsLinkPreview: false,
+    scrollEnabled: true,
+    preferredContentMode: 'mobile'
+  }
+};
+
+export default config;
