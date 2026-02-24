@@ -24,80 +24,136 @@ const CONFIG = getConfig();
 const parseMarkdown = (text) => {
   if (!text) return '';
   
-   // Protect LaTeX math delimiters before markdown processing
-   const displayMath = [];
-   const inlineMath = [];
-   
-   let protectedText = text
-     // Protect display math $$...$$ and \[...\]
-     .replace(/\$\$[\s\S]*?\$\$/g, (match) => {
-       displayMath.push(match);
-       return `__DISPLAY_MATH_${displayMath.length - 1}__`;
-     })
-     .replace(/\\\[[\s\S]*?\\\]/g, (match) => {
-       displayMath.push(match);
-       return `__DISPLAY_MATH_${displayMath.length - 1}__`;
-     });
-   
-   // Protect inline math $...$ and \(...\)
-   protectedText = protectedText
-     .replace(/\$[^\$\n]+?\$/g, (match) => {
-       inlineMath.push(match);
-       return `__INLINE_MATH_${inlineMath.length - 1}__`;
-     })
-     .replace(/\\\([^\)]+?\\\)/g, (match) => {
-       inlineMath.push(match);
-       return `__INLINE_MATH_${inlineMath.length - 1}__`;
-     });
-   
-   // Apply markdown transformations
-   let html = protectedText
-    // Escape HTML special characters
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    // Headers (h1, h2, h3)
-    .replace(/^### (.*?)$/gm, '<h3 style="font-size: 18px; font-weight: 600; margin: 12px 0 6px; color: var(--text-primary);">$1</h3>')
-    .replace(/^## (.*?)$/gm, '<h2 style="font-size: 20px; font-weight: 600; margin: 14px 0 8px; color: var(--text-primary);">$1</h2>')
-    .replace(/^# (.*?)$/gm, '<h1 style="font-size: 24px; font-weight: 700; margin: 16px 0 10px; color: var(--text-primary);">$1</h1>')
-    // Bold and Italic
-    .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/__(.*?)__/g, '<strong>$1</strong>')
-    .replace(/_(.*?)_/g, '<em>$1</em>')
-    // Code blocks
-    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; font-family: monospace; font-size: 13px;"><code>$2</code></pre>')
-    .replace(/`([^`]+)`/g, '<code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px;">$1</code>')
-    // Bullet lists
-    .replace(/^\* (.*?)$/gm, '<li>$1</li>')
-    .replace(/^- (.*?)$/gm, '<li>$1</li>')
-    // Numbered lists
-    .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
-    // Wrap lists in ul
-    .replace(/(<li>.*?<\/li>)(?!<li>)/s, '<ul style="margin: 8px 0; padding-left: 20px;">$1</ul>')
-    // Blockquotes
-    .replace(/^&gt; (.*?)$/gm, '<blockquote style="border-left: 3px solid var(--primary-500); padding-left: 12px; margin: 8px 0; color: var(--text-secondary); font-style: italic;">$1</blockquote>')
-    // Line breaks and paragraphs
-    .replace(/\n\n/g, '</p><p style="margin: 8px 0; line-height: 1.6;">')
-    .replace(/\n/g, '<br>');
+  // Store LaTeX math blocks to protect them from markdown processing
+  const displayMath = [];
+  const inlineMath = [];
+  const codePlaceholders = [];
   
-  // Wrap in paragraph if not already wrapped
-  if (!html.startsWith('<')) {
-    html = '<p style="margin: 0; line-height: 1.6;">' + html + '</p>';
-  }
-  
-  // Restore display math
-  displayMath.forEach((math, idx) => {
-    html = html.replace(`__DISPLAY_MATH_${idx}__`, math);
+  // Step 1: Protect LaTeX display math $$...$$ and \[...\]
+  let protectedText = text.replace(/\$\$[\s\S]*?\$\$/g, (match) => {
+    displayMath.push(match);
+    return `__DISPLAY_MATH_${displayMath.length - 1}__`;
+  }).replace(/\\\[[\s\S]*?\\\]/g, (match) => {
+    displayMath.push(match);
+    return `__DISPLAY_MATH_${displayMath.length - 1}__`;
   });
   
-  // Restore inline math
+  // Step 2: Protect code blocks before other processing
+  protectedText = protectedText.replace(/```[\s\S]*?```/g, (match) => {
+    codePlaceholders.push(match);
+    return `__CODE_BLOCK_${codePlaceholders.length - 1}__`;
+  });
+  
+  // Step 3: Protect inline code `...`
+  protectedText = protectedText.replace(/`[^`]+`/g, (match) => {
+    codePlaceholders.push(match);
+    return `__INLINE_CODE_${codePlaceholders.length - 1}__`;
+  });
+  
+  // Step 4: Protect inline math $...$ and \(...\) - must be AFTER code protection
+  protectedText = protectedText.replace(/\$[^\$\n]+?\$/g, (match) => {
+    inlineMath.push(match);
+    return `__INLINE_MATH_${inlineMath.length - 1}__`;
+  }).replace(/\\\([^\)]+?\\\)/g, (match) => {
+    inlineMath.push(match);
+    return `__INLINE_MATH_${inlineMath.length - 1}__`;
+  });
+  
+  // Step 5: Split into lines and process
+  let lines = protectedText.split('\n');
+  let html = '';
+  let inList = false;
+  let listItems = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    
+    // Skip empty lines at the start
+    if (!line && html === '') continue;
+    
+    // Headers
+    if (line.match(/^#{1,6} /)) {
+      const level = line.match(/^#+/)[0].length;
+      const content = line.replace(/^#+\s/, '');
+      const processed = processInlineMarkdown(content);
+      html += `<h${level} style="font-size: ${24 - level * 2}px; font-weight: 600; margin: 12px 0 6px; color: var(--text-primary);">${processed}</h${level}>`;
+    }
+    // Blockquotes
+    else if (line.match(/^> /)) {
+      const content = line.replace(/^> /, '');
+      const processed = processInlineMarkdown(content);
+      html += `<blockquote style="border-left: 3px solid var(--primary-500); padding-left: 12px; margin: 8px 0; color: var(--text-secondary); font-style: italic;">${processed}</blockquote>`;
+    }
+    // List items
+    else if (line.match(/^[-*•]\s/) || line.match(/^\d+\.\s/)) {
+      if (!inList) {
+        inList = true;
+        listItems = [];
+      }
+      const content = line.replace(/^[-*•]\s/, '').replace(/^\d+\.\s/, '');
+      const processed = processInlineMarkdown(content);
+      listItems.push(`<li>${processed}</li>`);
+    }
+    // End list if we hit non-list content
+    else if (inList && line) {
+      html += `<ul style="margin: 8px 0; padding-left: 20px;">${listItems.join('')}</ul>`;
+      inList = false;
+      listItems = [];
+      if (line) {
+        const processed = processInlineMarkdown(line);
+        html += `<p style="margin: 8px 0; line-height: 1.6;">${processed}</p>`;
+      }
+    }
+    // Regular paragraphs
+    else if (line) {
+      const processed = processInlineMarkdown(line);
+      html += `<p style="margin: 8px 0; line-height: 1.6;">${processed}</p>`;
+    }
+  }
+  
+  // Close any open list
+  if (inList && listItems.length) {
+    html += `<ul style="margin: 8px 0; padding-left: 20px;">${listItems.join('')}</ul>`;
+  }
+  
+  // Step 6: Restore code blocks with proper escaping
+  codePlaceholders.forEach((code, idx) => {
+    let escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;');
+    if (code.startsWith('```')) {
+      const match = code.match(/```(\w+)?\n([\s\S]*?)```/);
+      if (match) {
+        escapedCode = `<pre style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; font-family: monospace; font-size: 13px;"><code>${match[2].replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;')}</code></pre>`;
+      }
+    } else {
+      escapedCode = `<code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px;">${code.slice(1, -1).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;')}</code>`;
+    }
+    html = html.replace(`__CODE_BLOCK_${idx}__`, escapedCode).replace(`__INLINE_CODE_${idx}__`, escapedCode);
+  });
+  
+  // Step 7: Restore inline math
   inlineMath.forEach((math, idx) => {
     html = html.replace(`__INLINE_MATH_${idx}__`, math);
   });
   
+  // Step 8: Restore display math
+  displayMath.forEach((math, idx) => {
+    html = html.replace(`__DISPLAY_MATH_${idx}__`, math);
+  });
+  
   return html;
+};
+
+// Helper function to process inline markdown (bold, italic, etc)
+const processInlineMarkdown = (text) => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/_(.*?)_/g, '<em>$1</em>');
 };
 
 const AIChat = ({ isOpen, onClose }) => {
