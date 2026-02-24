@@ -1,6 +1,9 @@
 // Cloud Database Adapter using Firebase Firestore
 // Falls back gracefully to LocalDatabase if Firebase is unconfigured
 
+// Guard against double-loading
+if (typeof CloudDatabase === 'undefined') {
+
 class CloudDatabase {
   constructor() {
     this._cachedData = null;
@@ -131,6 +134,8 @@ class CloudDatabase {
   }
 
   // --- Users ---
+
+  // --- Users ---
   async validateUser(role, username, password) {
     if (!this.isConfigured) {
       // LocalStorage fallback
@@ -161,8 +166,7 @@ class CloudDatabase {
       throw new Error('Database connection error. Please try again.');
     }
   }
-  async getUserByUsername(username) {
-    if (!this.isConfigured) return this.localDB.getUserByUsername(username);
+
     const snapshot = await this.db.collection('users').where('username', '==', username).get();
     if (snapshot.empty) return null;
     return snapshot.docs[0].data();
@@ -358,3 +362,4 @@ class CloudDatabase {
 
   waitForData();
 })();
+} // End of CloudDatabase guard
