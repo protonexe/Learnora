@@ -19,7 +19,8 @@ const DEFAULT_CONFIG = {
     key: "",
     endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
     models: [
-      { id: 'deepseek-ai/deepseek-v3.1', label: 'DeepSeek V3.1' }
+      { id: 'deepseek-ai/deepseek-v3.2', label: 'DeepSeek V3.2' },
+      { id: 'minimaxai/minimax-m2.1', label: 'MiniMax M2.1' }
     ]
   },
   openrouter: {
