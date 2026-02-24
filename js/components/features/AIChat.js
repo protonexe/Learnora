@@ -67,7 +67,7 @@ const AIChat = ({ isOpen, onClose }) => {
   }, [aiProvider, selectedModel]);
 
   const getProxyUrl = (url) => {
-    return url;
+    return 'https://corsproxy.io/?' + encodeURIComponent(url);
   };
 
   const callGemini = async (history, msg) => {

@@ -63,7 +63,7 @@ const AITutorView = () => {
   }, [conversations, aiProvider, selectedModel, isTyping]);
 
   const getProxyUrl = (url) => {
-    return url;
+    return 'https://corsproxy.io/?' + encodeURIComponent(url);
   };
 
   const callAI = async (msg) => {
