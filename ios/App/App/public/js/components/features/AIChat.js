@@ -184,7 +184,7 @@ const AIChat = ({ isOpen, onClose }) => {
       parts: [{ text: userMessage }]
     });
 
-    const response = await fetch("https://corsproxy.io/?" + url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -217,7 +217,7 @@ const AIChat = ({ isOpen, onClose }) => {
       { role: "user", content: userMessage }
     ];
 
-    const response = await fetch("https://corsproxy.io/?https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,

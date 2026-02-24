@@ -1,0 +1,12 @@
+{
+  "name": "learnora-functions",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build step needed for JS functions'"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.0.0",
+    "firebase-functions": "^4.0.0"
+  }
+}
