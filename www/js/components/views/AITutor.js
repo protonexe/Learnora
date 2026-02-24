@@ -27,12 +27,16 @@ const AITutorView = () => {
   const [activeId, setActiveId] = React.useState(null);
   const [currentMessage, setCurrentMessage] = React.useState('');
   const [isTyping, setIsTyping] = React.useState(false);
-  const [aiProvider, setAiProvider] = React.useState(() => localStorage.getItem('learnora-ai-provider') || 'gemini');
+  const validProviders = Object.keys(CONFIG);
+  const [aiProvider, setAiProvider] = React.useState(() => {
+    const saved = localStorage.getItem('learnora-ai-provider');
+    return saved && validProviders.includes(saved) ? saved : validProviders[0];
+  });
   const [selectedModel, setSelectedModel] = React.useState(() => {
-    const p = localStorage.getItem('learnora-ai-provider') || 'gemini';
-    const models = CONFIG[p]?.models || CONFIG.gemini.models;
+    const p = localStorage.getItem('learnora-ai-provider') || validProviders[0];
+    const models = CONFIG[p]?.models || [];
     const saved = localStorage.getItem('learnora-ai-model');
-    return (saved && models.find(m => m.id === saved)) ? saved : models[0].id;
+    return (saved && models.find(m => m.id === saved)) ? saved : (models[0]?.id || '');
   });
 
   const endRef = React.useRef(null);
@@ -122,7 +126,7 @@ const AITutorView = () => {
               ))}
             </div>
             <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '11px' }}>
-              {CONFIG[aiProvider].models.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+              {(CONFIG[aiProvider]?.models || []).map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
             </select>
           </div>
         </div>

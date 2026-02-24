@@ -27,12 +27,17 @@ const AIChat = ({ isOpen, onClose }) => {
   });
   const [currentMessage, setCurrentMessage] = React.useState('');
   const [isTyping, setIsTyping] = React.useState(false);
-  const [aiProvider, setAiProvider] = React.useState(() => localStorage.getItem('learnora-ai-provider') || 'gemini');
+  const validProviders = Object.keys(CONFIG);
+  const [aiProvider, setAiProvider] = React.useState(() => {
+    const saved = localStorage.getItem('learnora-ai-provider');
+    return saved && validProviders.includes(saved) ? saved : validProviders[0];
+  });
   const [selectedModel, setSelectedModel] = React.useState(() => {
-    const p = localStorage.getItem('learnora-ai-provider') || 'gemini';
+    const p = localStorage.getItem('learnora-ai-provider');
+    const actualP = p && validProviders.includes(p) ? p : validProviders[0];
     const saved = localStorage.getItem('learnora-ai-model');
-    const providerModels = CONFIG[p]?.models || CONFIG.gemini.models;
-    return (saved && providerModels.find(m => m.id === saved)) ? saved : providerModels[0].id;
+    const providerModels = CONFIG[actualP]?.models || [];
+    return (saved && providerModels.find(m => m.id === saved)) ? saved : (providerModels[0]?.id || '');
   });
 
   const messagesEndRef = React.useRef(null);
