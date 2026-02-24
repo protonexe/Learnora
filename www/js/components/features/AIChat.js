@@ -24,34 +24,34 @@ const CONFIG = getConfig();
 const parseMarkdown = (text) => {
   if (!text) return '';
   
-  // Protect LaTeX math delimiters before markdown processing
-  const displayMath = [];
-  const inlineMath = [];
-  
-  let protected = text
-    // Protect display math $$...$$ and \[...\]
-    .replace(/\$\$[\s\S]*?\$\$/g, (match) => {
-      displayMath.push(match);
-      return `__DISPLAY_MATH_${displayMath.length - 1}__`;
-    })
-    .replace(/\\\[[\s\S]*?\\\]/g, (match) => {
-      displayMath.push(match);
-      return `__DISPLAY_MATH_${displayMath.length - 1}__`;
-    });
-  
-  // Protect inline math $...$ and \(...\)
-  protected = protected
-    .replace(/\$[^\$\n]+?\$/g, (match) => {
-      inlineMath.push(match);
-      return `__INLINE_MATH_${inlineMath.length - 1}__`;
-    })
-    .replace(/\\\([^\)]+?\\\)/g, (match) => {
-      inlineMath.push(match);
-      return `__INLINE_MATH_${inlineMath.length - 1}__`;
-    });
-  
-  // Apply markdown transformations
-  let html = protected
+   // Protect LaTeX math delimiters before markdown processing
+   const displayMath = [];
+   const inlineMath = [];
+   
+   let protectedText = text
+     // Protect display math $$...$$ and \[...\]
+     .replace(/\$\$[\s\S]*?\$\$/g, (match) => {
+       displayMath.push(match);
+       return `__DISPLAY_MATH_${displayMath.length - 1}__`;
+     })
+     .replace(/\\\[[\s\S]*?\\\]/g, (match) => {
+       displayMath.push(match);
+       return `__DISPLAY_MATH_${displayMath.length - 1}__`;
+     });
+   
+   // Protect inline math $...$ and \(...\)
+   protectedText = protectedText
+     .replace(/\$[^\$\n]+?\$/g, (match) => {
+       inlineMath.push(match);
+       return `__INLINE_MATH_${inlineMath.length - 1}__`;
+     })
+     .replace(/\\\([^\)]+?\\\)/g, (match) => {
+       inlineMath.push(match);
+       return `__INLINE_MATH_${inlineMath.length - 1}__`;
+     });
+   
+   // Apply markdown transformations
+   let html = protectedText
     // Escape HTML special characters
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

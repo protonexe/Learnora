@@ -28,7 +28,7 @@ const parseMarkdown = (text) => {
   const displayMath = [];
   const inlineMath = [];
   
-  let protected = text
+  let protectedText = text
     // Protect display math $$...$$ and \[...\]
     .replace(/\$\$[\s\S]*?\$\$/g, (match) => {
       displayMath.push(match);
@@ -40,7 +40,7 @@ const parseMarkdown = (text) => {
     });
   
   // Protect inline math $...$ and \(...\)
-  protected = protected
+  protectedText = protectedText
     .replace(/\$[^\$\n]+?\$/g, (match) => {
       inlineMath.push(match);
       return `__INLINE_MATH_${inlineMath.length - 1}__`;
@@ -51,7 +51,7 @@ const parseMarkdown = (text) => {
     });
   
   // Apply markdown transformations
-  let html = protected
+  let html = protectedText
     // Escape HTML special characters
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
