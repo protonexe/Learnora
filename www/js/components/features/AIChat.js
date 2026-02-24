@@ -7,28 +7,12 @@ const DEFAULT_CONFIG = {
       { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' }
     ]
   },
-  kilo: {
-    key: "",
-    endpoint: "https://api.kilo.ai/v1/chat/completions",
-    models: [
-      { id: 'meta-llama/Llama-3.3-70B-Instruct', label: 'Llama 3.3 70B' },
-      { id: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B' }
-    ]
-  },
-  nvidia: {
-    key: "",
-    endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
-    models: [
-      { id: 'deepseek-ai/deepseek-v3.2', label: 'DeepSeek V3.2' },
-      { id: 'minimaxai/minimax-m2.1', label: 'MiniMax M2.1' }
-    ]
-  },
   openrouter: {
     key: "",
     endpoint: "https://openrouter.ai/api/v1/chat/completions",
     models: [
-      { id: 'arcee-ai/trinity-large-preview:free', label: 'Trinity Large' },
-      { id: 'deepseek/deepseek-r1:free', label: 'DeepSeek R1' }
+      { id: 'deepseek/deepseek-r1:free', label: 'DeepSeek R1' },
+      { id: 'google/gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash' }
     ]
   }
 };
