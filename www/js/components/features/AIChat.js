@@ -178,28 +178,36 @@ const AIChat = ({ isOpen, onClose }) => {
     return data.candidates[0].content.parts[0].text;
   };
 
-  const callOpenAI = async (provider, history, msg) => {
-    const config = CONFIG[provider];
-    const url = getProxyUrl(config.endpoint);
-    const apiMessages = [
-      { role: "system", content: "You are Learnora AI Tutor. Expert educator. Use LaTeX with $...$ for inline math and $$...$$ for display math. Use markdown with proper headers (# for h1, ## for h2, ### for h3), **bold**, *italic*, `code`, and - for lists." },
-      ...history.slice(-5).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
-      { role: "user", content: msg }
-    ];
+   const callOpenAI = async (provider, history, msg) => {
+     const config = CONFIG[provider];
+     const url = getProxyUrl(config.endpoint);
+     const apiMessages = [
+       { role: "system", content: "You are Learnora AI Tutor. Expert educator. Use LaTeX with $...$ for inline math and $$...$$ for display math. Use markdown with proper headers (# for h1, ## for h2, ### for h3), **bold**, *italic*, `code`, and - for lists." },
+       ...history.slice(-5).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+       { role: "user", content: msg }
+     ];
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { 
-        "Authorization": `Bearer ${config.key}`, 
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ model: selectedModel, messages: apiMessages, temperature: 0.7, max_tokens: 2000 })
-    });
-    
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || `${provider} Error ${res.status}`);
-    return data.choices[0].message.content;
-  };
+     const headers = { 
+       "Authorization": `Bearer ${config.key}`, 
+       "Content-Type": "application/json"
+     };
+
+     // Add OpenRouter-specific headers if using OpenRouter
+     if (provider === 'openrouter') {
+       headers["HTTP-Referer"] = window.location.href;
+       headers["X-Title"] = "Learnora AI Tutor";
+     }
+
+     const res = await fetch(url, {
+       method: "POST",
+       headers,
+       body: JSON.stringify({ model: selectedModel, messages: apiMessages, temperature: 0.7, max_tokens: 2000 })
+     });
+     
+     const data = await res.json();
+     if (!res.ok) throw new Error(data.error?.message || `${provider} Error ${res.status}`);
+     return data.choices[0].message.content;
+   };
 
   const handleSend = async () => {
     if (!currentMessage.trim()) return;

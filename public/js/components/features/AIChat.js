@@ -187,12 +187,20 @@ const AIChat = ({ isOpen, onClose }) => {
       { role: "user", content: msg }
     ];
 
+    const headers = { 
+      "Authorization": `Bearer ${config.key}`, 
+      "Content-Type": "application/json"
+    };
+
+    // Add OpenRouter-specific headers if using OpenRouter
+    if (provider === 'openrouter') {
+      headers["HTTP-Referer"] = window.location.href;
+      headers["X-Title"] = "Learnora AI Tutor";
+    }
+
     const res = await fetch(url, {
       method: "POST",
-      headers: { 
-        "Authorization": `Bearer ${config.key}`, 
-        "Content-Type": "application/json"
-      },
+      headers,
       body: JSON.stringify({ model: selectedModel, messages: apiMessages, temperature: 0.7, max_tokens: 2000 })
     });
     
