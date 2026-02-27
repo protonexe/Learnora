@@ -24,7 +24,8 @@
   }
 
   /* Bottom Navigation */
-  .bottom-nav {
+  .bottom-nav,
+  nav[style*="position: fixed"] {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
@@ -159,7 +160,8 @@
 
 /* Safe area insets for notched devices */
 @supports (padding: env(safe-area-inset-bottom)) {
-  .bottom-nav {
+  .bottom-nav,
+  nav[style*="position: fixed"][style*="bottom: 0"] {
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
     height: calc(56px + env(safe-area-inset-bottom, 0)) !important;
   }
@@ -175,7 +177,8 @@
     height: 44px !important;
   }
 
-  .bottom-nav {
+  .bottom-nav,
+  nav[style*="position: fixed"] {
     height: 44px !important;
   }
 

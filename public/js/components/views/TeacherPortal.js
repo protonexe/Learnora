@@ -1,77 +1,67 @@
-const TeacherPortal = ({ userId, onLogout, showToast }) => {
+const TeacherPortal = ({ onLogout, showToast }) => {
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const { theme } = useTheme();
   const [selectedClass, setSelectedClass] = React.useState(null);
   const isMobile = window.innerWidth <= 768;
 
-  const [showAssignModal, setShowAssignModal] = React.useState(false);
-  const [showMessageModal, setShowMessageModal] = React.useState(false);
-  const [newAssignment, setNewAssignment] = React.useState({ title: '', classId: '', dueDate: '', description: '' });
-  const [selectedRecipient, setSelectedRecipient] = React.useState(null);
-  const [messageContent, setMessageContent] = React.useState('');
-
-  const [classes, setClasses] = React.useState([]);
-  const [recentStudents, setRecentStudents] = React.useState([]);
-  const [pendingAssignments, setPendingAssignments] = React.useState([]);
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      if (window.LearnoraDB && userId) {
-        const cls = await window.LearnoraDB.getClassesForTeacher(userId);
-        const students = await window.LearnoraDB.getRecentStudentsForTeacher(userId);
-        const assignments = await window.LearnoraDB.getPendingAssignments(userId);
-        setClasses(cls || []);
-        setRecentStudents(students || []);
-        setPendingAssignments(assignments || []);
-      }
-    };
-    fetchData();
-  }, [userId]);
-
-  const handleCreateAssignment = async (e) => {
-    e.preventDefault();
-    if (!newAssignment.title || !newAssignment.classId || !newAssignment.dueDate) {
-      showToast('Please fill in all required fields', 'warning');
-      return;
-    }
-
-    try {
-      const cls = classes.find(c => c.id === newAssignment.classId);
-      await window.LearnoraDB.addAssignment({
-        ...newAssignment,
-        teacherId: userId,
-        class: cls ? cls.name : 'Unknown Class',
-        submissions: '0/24'
-      });
-      showToast('Assignment created successfully', 'success');
-      setShowAssignModal(false);
-      setNewAssignment({ title: '', classId: '', dueDate: '', description: '' });
-      const updatedAssignments = await window.LearnoraDB.getPendingAssignments(userId);
-      setPendingAssignments(updatedAssignments || []);
-    } catch (error) {
-      showToast('Failed to create assignment', 'error');
-    }
-  };
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!messageContent.trim() || !selectedRecipient) return;
-
-    try {
-      await window.LearnoraDB.sendMessage(userId, selectedRecipient.id, messageContent);
-      showToast('Message sent to ' + selectedRecipient.name, 'success');
-      setMessageContent('');
-      setShowMessageModal(false);
-    } catch (error) {
-      showToast('Failed to send message', 'error');
-    }
-  };
-
   const teacherStats = [
-    { label: 'Total Students', value: recentStudents.length || '0', icon: 'users', color: '#f43f5e', change: '+12' },
-    { label: 'Classes', value: classes.length || '0', icon: 'book-open', color: '#14b8a6', change: 'Active' },
-    { label: 'Assignments', value: pendingAssignments.length || '0', icon: 'file-text', color: '#0ea5e9', change: `${pendingAssignments.length} pending` },
-    { label: 'Avg. Score', value: `${classes.length ? Math.round(classes.reduce((a,c)=>a+c.avgScore,0)/classes.length) : 0}%`, icon: 'award', color: '#10b981', change: '+3%' },
+    { label: 'Total Students', value: '156', icon: 'users', color: '#f43f5e', change: '+12' },
+    { label: 'Classes', value: '4', icon: 'book-open', color: '#14b8a6', change: 'Active' },
+    { label: 'Assignments', value: '24', icon: 'file-text', color: '#0ea5e9', change: '8 pending' },
+    { label: 'Avg. Score', value: '78%', icon: 'award', color: '#10b981', change: '+3%' },
+  ];
+
+  const classes = [
+    { 
+      id: 1, 
+      name: 'Mathematics 101', 
+      students: 35, 
+      icon: '📐', 
+      avgScore: 82,
+      assignments: 8,
+      color: '#f43f5e'
+    },
+    { 
+      id: 2, 
+      name: 'Physics 102', 
+      students: 32, 
+      icon: '⚛️', 
+      avgScore: 76,
+      assignments: 6,
+      color: '#14b8a6'
+    },
+    { 
+      id: 3, 
+      name: 'Chemistry 103', 
+      students: 28, 
+      icon: '🧪', 
+      avgScore: 71,
+      assignments: 7,
+      color: '#0ea5e9'
+    },
+    { 
+      id: 4, 
+      name: 'Biology 104', 
+      students: 31, 
+      icon: '🧬', 
+      avgScore: 84,
+      assignments: 5,
+      color: '#10b981'
+    },
+  ];
+
+  const recentStudents = [
+    { id: 1, name: 'Alex Johnson', class: 'Math 101', score: 92, status: 'excellent' },
+    { id: 2, name: 'Sarah Smith', class: 'Physics 102', score: 78, status: 'good' },
+    { id: 3, name: 'Mike Brown', class: 'Chemistry 103', score: 65, status: 'needs-improvement' },
+    { id: 4, name: 'Emma Davis', class: 'Biology 104', score: 88, status: 'excellent' },
+    { id: 5, name: 'James Wilson', class: 'Math 101', score: 71, status: 'good' },
+  ];
+
+  const pendingAssignments = [
+    { id: 1, title: 'Algebra Problem Set', class: 'Math 101', due: 'Today', submissions: '28/35' },
+    { id: 2, title: 'Newton Laws Lab', class: 'Physics 102', due: 'Tomorrow', submissions: '25/32' },
+    { id: 3, title: 'Chemical Reactions', class: 'Chemistry 103', due: '3 days', submissions: '18/28' },
   ];
 
   return (
@@ -81,6 +71,7 @@ const TeacherPortal = ({ userId, onLogout, showToast }) => {
       backgroundImage: 'var(--gradient-mesh)',
       paddingBottom: isMobile ? '80px' : '24px'
     }}>
+      {/* Header Section */}
       <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '1400px', margin: '0 auto' }}>
         <div style={{ 
           display: 'flex', 
@@ -138,7 +129,9 @@ const TeacherPortal = ({ userId, onLogout, showToast }) => {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: '500' }}>{stat.label}</p>
+                  <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: '500' }}>
+                    {stat.label}
+                  </p>
                   <p style={{ fontSize: isMobile ? '22px' : '24px', fontWeight: '700' }}>{stat.value}</p>
                 </div>
                 <div style={{
@@ -193,34 +186,121 @@ const TeacherPortal = ({ userId, onLogout, showToast }) => {
           ))}
         </div>
 
-        {/* Tab Content */}
+        {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', gap: isMobile ? '12px' : '24px' }}>
-            <AnimatedCard delay={100} style={{ background: 'var(--glass-bg)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-              <h3>Your Classes</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-                {classes.map(cls => (
-                  <div key={cls.id} style={{ padding: '12px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '24px' }}>{cls.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontWeight: '600' }}>{cls.name}</p>
-                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{cls.students} students</p>
+            {/* Classes Overview */}
+            <AnimatedCard delay={100} style={{
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-lg)',
+              padding: isMobile ? '16px' : '24px',
+              backdropFilter: 'blur(12px)',
+              gridColumn: 'span 1'
+            }}>
+              <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', marginBottom: isMobile ? '12px' : '16px' }}>Your Classes</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+                {classes.slice(0, isMobile ? 3 : 4).map(cls => (
+                  <div
+                    key={cls.id}
+                    onClick={() => setSelectedClass(cls)}
+                    style={{
+                      padding: isMobile ? '10px' : '12px',
+                      background: selectedClass?.id === cls.id ? 'var(--primary-100)' : 'var(--bg-tertiary)',
+                      borderRadius: 'var(--radius-md)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: isMobile ? '10px' : '12px',
+                      transition: 'all var(--transition-fast)',
+                      border: selectedClass?.id === cls.id ? `2px solid var(--primary-500)` : '1px solid var(--border-color)'
+                    }}
+                  >
+                    <span style={{ fontSize: isMobile ? '20px' : '24px' }}>{cls.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '600' }}>{cls.name}</p>
+                      <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-secondary)' }}>{cls.students} students</p>
                     </div>
-                    <p style={{ fontWeight: '700', color: cls.color }}>{cls.avgScore}%</p>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '700', color: cls.color }}>{cls.avgScore}%</p>
+                      <p style={{ fontSize: isMobile ? '10px' : '11px', color: 'var(--text-tertiary)' }}>Avg</p>
+                    </div>
                   </div>
                 ))}
               </div>
             </AnimatedCard>
-            <AnimatedCard delay={150} style={{ background: 'var(--glass-bg)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-              <h3>Recent Activity</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-                {recentStudents.slice(0, 5).map(student => (
-                  <div key={student.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <Avatar name={student.name} size="sm" />
-                      <p style={{ fontWeight: '600' }}>{student.name}</p>
+
+            {/* Recent Students */}
+            <AnimatedCard delay={150} style={{
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-lg)',
+              padding: isMobile ? '16px' : '24px',
+              backdropFilter: 'blur(12px)',
+            }}>
+              <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', marginBottom: isMobile ? '12px' : '16px' }}>Recent Activity</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+                {recentStudents.slice(0, isMobile ? 4 : 5).map(student => (
+                  <div key={student.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: isMobile ? '10px' : '12px',
+                    background: 'var(--bg-tertiary)',
+                    borderRadius: 'var(--radius-md)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '12px' }}>
+                      <Avatar name={student.name} size={isMobile ? 'xs' : 'sm'} />
+                      <div>
+                        <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '600' }}>{student.name}</p>
+                        <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-secondary)' }}>{student.class}</p>
+                      </div>
                     </div>
-                    <Badge label={`${student.score}%`} color="#10b981" />
+                    <Badge 
+                      label={`${student.score}%`} 
+                      color={student.status === 'excellent' ? '#10b981' : student.status === 'good' ? '#f59e0b' : '#ef4444'}
+                      size={isMobile ? 'sm' : 'md'}
+                    />
+                  </div>
+                ))}
+              </div>
+            </AnimatedCard>
+
+            {/* Pending Assignments */}
+            <AnimatedCard delay={200} style={{
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-lg)',
+              padding: isMobile ? '16px' : '24px',
+              backdropFilter: 'blur(12px)',
+              gridColumn: 'span 1'
+            }}>
+              <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', marginBottom: isMobile ? '12px' : '16px' }}>Pending Reviews</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+                {pendingAssignments.slice(0, isMobile ? 2 : 3).map(assign => (
+                  <div key={assign.id} style={{
+                    padding: isMobile ? '10px' : '12px',
+                    background: 'var(--bg-tertiary)',
+                    borderRadius: 'var(--radius-md)',
+                    borderLeft: '3px solid var(--primary-500)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? '6px' : '8px' }}>
+                      <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '600' }}>{assign.title}</p>
+                      <Badge label={assign.due} color="#f59e0b" size={isMobile ? 'sm' : 'md'} />
+                    </div>
+                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-secondary)', marginBottom: isMobile ? '6px' : '8px' }}>{assign.class}</p>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      background: 'var(--bg-primary)',
+                      padding: isMobile ? '4px 6px' : '6px 8px',
+                      borderRadius: 'var(--radius-sm)',
+                      width: 'fit-content'
+                    }}>
+                      <Icon name="check-circle" size={isMobile ? 12 : 14} color="var(--primary-500)" />
+                      <span style={{ fontSize: isMobile ? '11px' : '12px', fontWeight: '600' }}>{assign.submissions}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -228,113 +308,130 @@ const TeacherPortal = ({ userId, onLogout, showToast }) => {
           </div>
         )}
 
+        {/* Classes Tab */}
         {activeTab === 'classes' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-            {classes.map(cls => (
-              <AnimatedCard key={cls.id} style={{ background: 'var(--glass-bg)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '40px', marginBottom: '12px' }}>{cls.icon}</div>
-                <h4 style={{ fontWeight: '700' }}>{cls.name}</h4>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{cls.students} enrolled students</p>
+          <div style={{ 
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: isMobile ? '12px' : '20px'
+          }}>
+            {classes.map((cls, idx) => (
+              <AnimatedCard key={cls.id} delay={idx * 50} style={{
+                background: 'var(--glass-bg)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-lg)',
+                padding: isMobile ? '16px' : '24px',
+                backdropFilter: 'blur(12px)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+              }}>
+                <div style={{ marginBottom: isMobile ? '12px' : '16px' }}>
+                  <div style={{ fontSize: isMobile ? '32px' : '40px', marginBottom: isMobile ? '8px' : '12px' }}>{cls.icon}</div>
+                  <h4 style={{ fontSize: isMobile ? '15px' : '16px', fontWeight: '700', marginBottom: '4px' }}>{cls.name}</h4>
+                  <p style={{ fontSize: isMobile ? '12px' : '13px', color: 'var(--text-secondary)' }}>{cls.students} enrolled students</p>
+                </div>
+                <div style={{ 
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                  marginTop: isMobile ? '12px' : '16px',
+                  paddingTop: isMobile ? '12px' : '16px',
+                  borderTop: '1px solid var(--border-color)'
+                }}>
+                  <div>
+                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Avg. Score</p>
+                    <p style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '700', color: cls.color }}>{cls.avgScore}%</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Active Tasks</p>
+                    <p style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '700' }}>{cls.assignments}</p>
+                  </div>
+                </div>
               </AnimatedCard>
             ))}
           </div>
         )}
 
+        {/* Students Tab */}
         {activeTab === 'students' && (
-          <div style={{ background: 'var(--glass-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
-                  <th style={{ padding: '16px', textAlign: 'left' }}>Student</th>
-                  <th style={{ padding: '16px', textAlign: 'left' }}>Class</th>
-                  <th style={{ padding: '16px', textAlign: 'left' }}>Grade</th>
-                  <th style={{ padding: '16px', textAlign: 'center' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentStudents.map(student => (
-                  <tr key={student.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Avatar name={student.name} size="sm" />
-                        <span style={{ fontWeight: '600' }}>{student.name}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px' }}>{student.class}</td>
-                    <td style={{ padding: '16px' }}><Badge label={`${student.score}%`} color="#10b981" /></td>
-                    <td style={{ padding: '16px', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => { setSelectedRecipient(student); setShowMessageModal(true); }}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--primary-500)', cursor: 'pointer' }}
-                      >
-                        <Icon name="mail" size={18} />
-                      </button>
-                    </td>
+          <div style={{
+            background: 'var(--glass-bg)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--radius-lg)',
+            backdropFilter: 'blur(12px)',
+            overflow: 'hidden'
+          }}>
+            <div style={{ padding: isMobile ? '16px' : '24px', borderBottom: '1px solid var(--border-color)' }}>
+              <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700' }}>All Students</h3>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '500px' : 'auto' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <th style={{ padding: isMobile ? '12px' : '16px', textAlign: 'left', fontWeight: '600', fontSize: isMobile ? '12px' : '13px', color: 'var(--text-secondary)' }}>Name</th>
+                    <th style={{ padding: isMobile ? '12px' : '16px', textAlign: 'left', fontWeight: '600', fontSize: isMobile ? '12px' : '13px', color: 'var(--text-secondary)' }}>Class</th>
+                    <th style={{ padding: isMobile ? '12px' : '16px', textAlign: 'left', fontWeight: '600', fontSize: isMobile ? '12px' : '13px', color: 'var(--text-secondary)' }}>Score</th>
+                    <th style={{ padding: isMobile ? '12px' : '16px', textAlign: 'left', fontWeight: '600', fontSize: isMobile ? '12px' : '13px', color: 'var(--text-secondary)' }}>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentStudents.map(student => (
+                    <tr key={student.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: isMobile ? '12px' : '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '12px' }}>
+                          <Avatar name={student.name} size={isMobile ? 'xs' : 'sm'} />
+                          <span style={{ fontWeight: '600', fontSize: isMobile ? '13px' : '14px' }}>{student.name}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: isMobile ? '12px' : '16px', fontSize: isMobile ? '13px' : '14px', color: 'var(--text-secondary)' }}>{student.class}</td>
+                      <td style={{ padding: isMobile ? '12px' : '16px', fontSize: isMobile ? '13px' : '14px', fontWeight: '600' }}>{student.score}%</td>
+                      <td style={{ padding: isMobile ? '12px' : '16px' }}>
+                        <Badge 
+                          label={student.status.replace('-', ' ')} 
+                          color={student.status === 'excellent' ? '#10b981' : student.status === 'good' ? '#f59e0b' : '#ef4444'}
+                          size={isMobile ? 'sm' : 'md'}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
+        {/* Assignments Tab */}
         {activeTab === 'assignments' && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h3>Active Assignments</h3>
-              <Button onClick={() => setShowAssignModal(true)} size="sm" icon="plus">New Assignment</Button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-              {pendingAssignments.map(assign => (
-                <AnimatedCard key={assign.id} style={{ background: 'var(--glass-bg)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ fontWeight: '700' }}>{assign.title}</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{assign.class}</p>
-                  <div style={{ marginTop: '16px' }}>
-                    <p style={{ fontSize: '12px', marginBottom: '4px' }}>Submissions: {assign.submissions}</p>
-                    <ProgressBar value={40} />
+          <div style={{ 
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: isMobile ? '12px' : '20px'
+          }}>
+            {pendingAssignments.map((assign, idx) => (
+              <AnimatedCard key={assign.id} delay={idx * 50} style={{
+                background: 'var(--glass-bg)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-lg)',
+                padding: isMobile ? '16px' : '24px',
+                backdropFilter: 'blur(12px)'
+              }}>
+                <div style={{ marginBottom: isMobile ? '12px' : '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? '10px' : '12px' }}>
+                    <h4 style={{ fontSize: isMobile ? '15px' : '16px', fontWeight: '700' }}>{assign.title}</h4>
+                    <Badge label={assign.due} color="#f59e0b" size={isMobile ? 'sm' : 'md'} />
                   </div>
-                </AnimatedCard>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Modals */}
-        {showAssignModal && (
-          <Modal title="New Assignment" onClose={() => setShowAssignModal(false)}>
-            <form onSubmit={handleCreateAssignment}>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '4px' }}>Title</label>
-                <input type="text" value={newAssignment.title} onChange={e => setNewAssignment({...newAssignment, title: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)' }} required />
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '4px' }}>Class</label>
-                <select value={newAssignment.classId} onChange={e => setNewAssignment({...newAssignment, classId: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)' }} required>
-                  <option value="">Select Class</option>
-                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '4px' }}>Due Date</label>
-                <input type="date" value={newAssignment.dueDate} onChange={e => setNewAssignment({...newAssignment, dueDate: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)' }} required />
-              </div>
-              <Button type="submit" fullWidth>Create Assignment</Button>
-            </form>
-          </Modal>
-        )}
-
-        {showMessageModal && (
-          <Modal title={`Message to ${selectedRecipient?.name}`} onClose={() => setShowMessageModal(false)}>
-            <form onSubmit={handleSendMessage}>
-              <textarea 
-                value={messageContent} 
-                onChange={e => setMessageContent(e.target.value)} 
-                placeholder="Type message..."
-                style={{ width: '100%', height: '100px', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', marginBottom: '16px' }}
-                required
-              />
-              <Button type="submit" fullWidth icon="send">Send Message</Button>
-            </form>
-          </Modal>
+                  <p style={{ fontSize: isMobile ? '12px' : '13px', color: 'var(--text-secondary)' }}>{assign.class}</p>
+                </div>
+                <div style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: isMobile ? '10px' : '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: isMobile ? '12px' : '13px', fontWeight: '600' }}>Submissions</span>
+                    <span style={{ fontSize: isMobile ? '12px' : '13px', color: 'var(--text-secondary)' }}>{assign.submissions}</span>
+                  </div>
+                  <ProgressBar value={parseInt(assign.submissions.split('/')[0]) / parseInt(assign.submissions.split('/')[1]) * 100} size={isMobile ? 'sm' : 'md'} />
+                </div>
+              </AnimatedCard>
+            ))}
+          </div>
         )}
       </div>
     </div>

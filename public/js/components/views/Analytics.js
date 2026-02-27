@@ -1,6 +1,6 @@
 const AnalyticsView = () => {
   const [timeRange, setTimeRange] = React.useState('week');
-  const analytics = window.LearnoraDB && window.LearnoraDB.data.analytics ? window.LearnoraDB.data.analytics : (window.SampleData && window.SampleData.analytics ? window.SampleData.analytics : {});
+  const analytics = window.SampleData && window.SampleData.analytics ? window.SampleData.analytics : {};
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 

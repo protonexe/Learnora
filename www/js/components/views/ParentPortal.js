@@ -1,41 +1,31 @@
-const ParentPortal = ({ userId, onLogout, showToast }) => {
+const ParentPortal = ({ onLogout, showToast }) => {
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const [selectedChild, setSelectedChild] = React.useState(0);
   const { theme } = useTheme();
   const isMobile = window.innerWidth <= 768;
 
-  const [children, setChildren] = React.useState([]);
-  const [dynamicMessages, setDynamicMessages] = React.useState([]);
-
-  React.useEffect(() => {
-    const fetchChildrenAndMessages = async () => {
-      if (window.LearnoraDB && userId) {
-        // Fetch Children
-        const kids = await window.LearnoraDB.getChildrenForParent(userId);
-        const mappedKids = kids.map((k, i) => ({
-          id: k.id,
-          name: k.name,
-          grade: k.grade || '10th Grade',
-          avatar: k.name.split(' ').map(n=>n[0]).join(''),
-          gpa: 3.5 + (Math.random() * 0.5).toFixed(1) * 1, // Mock
-          attendance: 90 + Math.floor(Math.random() * 10),
-          activeAssignments: Math.floor(Math.random() * 5),
-          recentScore: 80 + Math.floor(Math.random() * 20)
-        }));
-        setChildren(mappedKids.length > 0 ? mappedKids : [{ 
-          id: 1, name: 'Emma Wilson', grade: '10th Grade', avatar: 'EW',
-          gpa: 3.8, attendance: 96, activeAssignments: 3, recentScore: 92
-        }]);
-
-        // Fetch Messages
-        const msgs = await window.LearnoraDB.getMessagesForUser(userId);
-        setDynamicMessages(msgs || []);
-      }
-    };
-    fetchChildrenAndMessages();
-  }, [userId]);
-
-  if (children.length === 0) return <div style={{padding: '40px', textAlign: 'center'}}>Loading...</div>;
+  const children = [
+    { 
+      id: 1, 
+      name: 'Emma Wilson', 
+      grade: '10th Grade', 
+      avatar: 'EW',
+      gpa: 3.8,
+      attendance: 96,
+      activeAssignments: 3,
+      recentScore: 92
+    },
+    { 
+      id: 2, 
+      name: 'Lucas Wilson', 
+      grade: '8th Grade', 
+      avatar: 'LW',
+      gpa: 3.5,
+      attendance: 94,
+      activeAssignments: 2,
+      recentScore: 85
+    },
+  ];
 
   const childStats = [
     { label: 'GPA', value: children[selectedChild].gpa, icon: 'award', color: '#f43f5e', change: 'Current' },
@@ -298,23 +288,7 @@ const ParentPortal = ({ userId, onLogout, showToast }) => {
             }}>
               <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', marginBottom: isMobile ? '12px' : '16px' }}>Teacher Messages</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
-                {dynamicMessages.length > 0 ? dynamicMessages.slice(0, 5).map(msg => (
-                  <div key={msg.id} style={{
-                    padding: isMobile ? '10px' : '12px',
-                    background: 'var(--bg-tertiary)',
-                    borderRadius: 'var(--radius-md)',
-                    borderLeft: '3px solid var(--primary-500)',
-                    cursor: 'pointer'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                      <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '700' }}>Teacher Message</p>
-                      <span style={{ fontSize: isMobile ? '10px' : '11px', color: 'var(--text-secondary)' }}>
-                        {msg.timestamp?.seconds ? new Date(msg.timestamp.seconds * 1000).toLocaleDateString() : 'Recent'}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: isMobile ? '12px' : '13px', color: 'var(--text-secondary)' }}>{msg.content}</p>
-                  </div>
-                )) : parentMessages.slice(0, isMobile ? 3 : 5).map(msg => (
+                {parentMessages.slice(0, isMobile ? 3 : 5).map(msg => (
                   <div key={msg.id} style={{
                     padding: isMobile ? '10px' : '12px',
                     background: msg.unread ? 'var(--primary-100)' : 'var(--bg-tertiary)',

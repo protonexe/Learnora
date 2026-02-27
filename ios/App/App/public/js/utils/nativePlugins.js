@@ -27,15 +27,19 @@ const NativePlugins = {
             }
         },
         
-        disable: async () => {
+        disable: async (password) => {
             if (!NativePlugins.isNative()) {
                 console.log('[KioskMode] Not native - disabling simulated kiosk');
                 return { success: true, message: 'Simulated kiosk disabled (web)' };
             }
             
+            if (!password) {
+                return { success: false, message: 'Password is required to exit kiosk mode', passwordRequired: true };
+            }
+            
             try {
                 const { KioskMode } = window.Capacitor.Plugins;
-                return await KioskMode.disableKioskMode();
+                return await KioskMode.disableKioskMode({ password: password });
             } catch (e) {
                 console.error('[KioskMode] Error:', e);
                 return { success: false, message: e.message };
@@ -65,6 +69,38 @@ const NativePlugins = {
                 return await KioskMode.isDeviceOwner();
             } catch (e) {
                 return { isDeviceOwner: false };
+            }
+        },
+        
+        verifyPassword: async (password) => {
+            if (!NativePlugins.isNative()) {
+                // In web mode, use the default password for demo
+                return { valid: password === 'admin1234' };
+            }
+            
+            try {
+                const { KioskMode } = window.Capacitor.Plugins;
+                return await KioskMode.verifyExitPassword({ password: password });
+            } catch (e) {
+                console.error('[KioskMode] Error verifying password:', e);
+                return { valid: false };
+            }
+        },
+        
+        setExitPassword: async (currentPassword, newPassword) => {
+            if (!NativePlugins.isNative()) {
+                return { success: true, message: 'Password updated (web simulation)' };
+            }
+            
+            try {
+                const { KioskMode } = window.Capacitor.Plugins;
+                return await KioskMode.setExitPassword({ 
+                    currentPassword: currentPassword, 
+                    newPassword: newPassword 
+                });
+            } catch (e) {
+                console.error('[KioskMode] Error setting password:', e);
+                return { success: false, message: e.message };
             }
         }
     },
@@ -112,6 +148,20 @@ const NativePlugins = {
             }
         },
         
+        writeTag: async (text) => {
+            if (!NativePlugins.isNative()) {
+                return { success: false, message: 'Tag writing requires native app' };
+            }
+            
+            try {
+                const { LearnoraNFC } = window.Capacitor.Plugins;
+                return await LearnoraNFC.writeTag({ text: text });
+            } catch (e) {
+                console.error('[NFC] Error writing tag:', e);
+                return { success: false, message: e.message };
+            }
+        },
+        
         addListener: (eventName, callback) => {
             if (!NativePlugins.isNative()) {
                 return null;
@@ -144,6 +194,7 @@ const NativePlugins = {
         if (!nfcData || !nfcData.records) return null;
         
         for (const record of nfcData.records) {
+            // JSON records (from MIME or parsed text)
             if (record.type === 'json' && record.parsedContent) {
                 const content = record.parsedContent;
                 if (content.userId || content.token || content.role) {
@@ -157,20 +208,24 @@ const NativePlugins = {
                 }
             }
             
+            // Text records
             if (record.type === 'text' && record.content) {
-                const text = record.content.trim().toLowerCase();
+                const text = record.content.trim();
+                const textLower = text.toLowerCase();
                 
+                // Simple role string
                 const validRoles = ['student', 'teacher', 'parent'];
-                if (validRoles.includes(text)) {
+                if (validRoles.includes(textLower)) {
                     return {
-                        userId: text + '-nfc-user',
-                        role: text,
+                        userId: textLower + '-nfc-user',
+                        role: textLower,
                         token: 'nfc-token-' + Date.now(),
-                        name: text.charAt(0).toUpperCase() + text.slice(1) + ' User',
+                        name: textLower.charAt(0).toUpperCase() + textLower.slice(1) + ' User',
                         timestamp: nfcData.timestamp
                     };
                 }
                 
+                // JSON in text record
                 if (text.startsWith('{') && text.endsWith('}')) {
                     try {
                         const json = JSON.parse(text);
@@ -186,6 +241,7 @@ const NativePlugins = {
                     }
                 }
                 
+                // Pipe-delimited: userId|role|token|name
                 const parts = text.split('|');
                 if (parts.length >= 2) {
                     return {
@@ -198,6 +254,25 @@ const NativePlugins = {
                 }
             }
             
+            // MIME records (e.g., application/json)
+            if (record.type === 'mime' && record.content) {
+                try {
+                    const json = JSON.parse(record.content);
+                    if (json.userId || json.token || json.role) {
+                        return {
+                            userId: json.userId || json.id,
+                            token: json.token || json.authToken,
+                            role: json.role,
+                            name: json.name,
+                            timestamp: json.timestamp || nfcData.timestamp
+                        };
+                    }
+                } catch (e) {
+                    // Not JSON mime
+                }
+            }
+            
+            // URL records
             if (record.type === 'url' && record.content) {
                 try {
                     const url = new URL(record.content);
@@ -213,6 +288,17 @@ const NativePlugins = {
                 } catch (e) {
                     // Invalid URL
                 }
+            }
+
+            // Tag ID only (non-NDEF tags) - use serial number as user ID
+            if (record.type === 'tag_id' && record.content && nfcData.serialNumber) {
+                return {
+                    userId: 'nfc-' + nfcData.serialNumber,
+                    role: 'student',
+                    token: 'nfc-tag-' + Date.now(),
+                    name: 'NFC User',
+                    timestamp: nfcData.timestamp
+                };
             }
         }
         

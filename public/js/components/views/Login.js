@@ -13,6 +13,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
+  const [loginError, setLoginError] = React.useState('');
   const { theme, toggleTheme } = useTheme();
 
   React.useEffect(() => {
@@ -122,7 +123,8 @@ const LoginView = ({ onAuthenticate, showToast }) => {
       { username: 'parent.wilson', password: 'parent123', name: 'John Wilson' },
     ],
     admin: [
-      { username: 'admin', password: 'admin123', name: 'System Admin' },
+      { username: 'admin', password: 'admin1234', name: 'Administrator' },
+      { username: 'admin.root', password: 'admin1234', name: 'Root Admin' },
     ]
   };
 
@@ -130,7 +132,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
     { id: 'student', label: 'Student', description: 'Access your courses' },
     { id: 'teacher', label: 'Teacher', description: 'Manage classes' },
     { id: 'parent', label: 'Parent', description: 'Track progress' },
-    { id: 'admin', label: 'Admin', description: 'System Management' },
+    { id: 'admin', label: 'Admin', description: 'System administration' },
   ];
 
   const validateCredentials = (role, user, pass) => {
@@ -172,9 +174,11 @@ const LoginView = ({ onAuthenticate, showToast }) => {
     if (!username.trim() || !password.trim()) {
       console.log('[LOGIN] Form validation failed - empty fields');
       showToast('Please enter username and password', 'warning');
+      setLoginError('Please enter both username and password');
       return;
     }
 
+    setLoginError('');
     console.log('[LOGIN] Form validation passed, setting isLoading to true');
     setIsLoading(true);
     
@@ -191,6 +195,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
       
       if (isValid) {
         console.log('[LOGIN] Credentials valid! Enabling kiosk mode for role:', selectedRole);
+        setLoginError('');
         await enableKioskMode(selectedRole);
         console.log('[LOGIN] Kiosk mode complete, calling onAuthenticate with role:', selectedRole);
         onAuthenticate(selectedRole);
@@ -201,6 +206,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
         console.log('[LOGIN] Form cleared');
       } else {
         console.log('[LOGIN] Credentials invalid - showing error');
+        setLoginError('Invalid username or password. Please check your credentials.');
         showToast('Invalid username or password', 'error');
       }
       console.log('[LOGIN] Setting isLoading to false');
@@ -386,7 +392,10 @@ const LoginView = ({ onAuthenticate, showToast }) => {
                   type="text"
                   placeholder="Enter username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setLoginError('');
+                  }}
                   autoFocus
                   style={{
                     width: '100%',
@@ -414,11 +423,14 @@ const LoginView = ({ onAuthenticate, showToast }) => {
                   type="password"
                   placeholder="Enter password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setLoginError('');
+                  }}
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: '1px solid var(--border-color)',
+                    border: loginError ? '1px solid var(--danger)' : '1px solid var(--border-color)',
                     borderRadius: '8px',
                     background: 'var(--bg-secondary)',
                     color: 'var(--text-primary)',
@@ -426,6 +438,17 @@ const LoginView = ({ onAuthenticate, showToast }) => {
                     outline: 'none'
                   }}
                 />
+                {loginError && (
+                  <p style={{ 
+                    color: 'var(--danger)', 
+                    fontSize: '12px', 
+                    marginTop: '8px', 
+                    textAlign: 'center',
+                    fontWeight: 500
+                  }}>
+                    {loginError}
+                  </p>
+                )}
               </div>
 
               <Button 
@@ -470,7 +493,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
               <p>Student: emma.wilson / pass123</p>
               <p>Teacher: mr.johnson / teacher123</p>
               <p>Parent: parent.wilson / parent123</p>
-              <p>Admin: admin / admin123</p>
+              <p>Admin: admin / admin1234</p>
             </div>
           </>
         ) : (

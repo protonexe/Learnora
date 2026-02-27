@@ -5,10 +5,37 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
   const [assignments, setAssignments] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const isMobile = window.innerWidth <= 768;
+  
+  // Device Owner states
+  const [isNativeApp, setIsNativeApp] = React.useState(false);
+  const [isDeviceOwner, setIsDeviceOwner] = React.useState(false);
+  const [kioskActive, setKioskActive] = React.useState(false);
+  const [showDeviceOwnerDialog, setShowDeviceOwnerDialog] = React.useState(false);
+  const [deviceOwnerPassword, setDeviceOwnerPassword] = React.useState('');
+  const [deviceOwnerError, setDeviceOwnerError] = React.useState('');
+  const [isDisablingDeviceOwner, setIsDisablingDeviceOwner] = React.useState(false);
 
   React.useEffect(() => {
     fetchData();
+    checkDeviceStatus();
   }, []);
+
+  const checkDeviceStatus = async () => {
+    const native = window.NativePlugins && window.NativePlugins.isNative();
+    setIsNativeApp(native);
+    
+    if (native) {
+      try {
+        const kioskResult = await window.NativePlugins.KioskMode.isActive();
+        setKioskActive(kioskResult.active);
+        
+        const ownerResult = await window.NativePlugins.KioskMode.isDeviceOwner();
+        setIsDeviceOwner(ownerResult.isDeviceOwner);
+      } catch (err) {
+        console.error('Error checking device status:', err);
+      }
+    }
+  };
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -28,6 +55,37 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
       }
     }
     setIsLoading(false);
+  };
+
+  const handleDisableDeviceOwner = async (e) => {
+    e.preventDefault();
+    
+    if (!deviceOwnerPassword.trim()) {
+      setDeviceOwnerError('Please enter password');
+      return;
+    }
+
+    setIsDisablingDeviceOwner(true);
+    setDeviceOwnerError('');
+
+    try {
+      const result = await window.NativePlugins.KioskMode.clearDeviceOwner({
+        password: deviceOwnerPassword
+      });
+
+      if (result.success) {
+        showToast('Device Owner status cleared successfully', 'success');
+        setIsDeviceOwner(false);
+        setShowDeviceOwnerDialog(false);
+        setDeviceOwnerPassword('');
+      } else {
+        setDeviceOwnerError(result.message || 'Failed to clear Device Owner');
+      }
+    } catch (err) {
+      setDeviceOwnerError(err.message || 'Error clearing Device Owner');
+    } finally {
+      setIsDisablingDeviceOwner(false);
+    }
   };
 
   const adminStats = [
@@ -134,26 +192,26 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
           paddingBottom: '8px',
           scrollbarWidth: 'none'
         }}>
-          {['dashboard', 'users', 'courses'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '8px 16px',
-                background: activeTab === tab ? 'var(--primary-500)' : 'var(--bg-secondary)',
-                color: activeTab === tab ? '#fff' : 'var(--text-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+           {['dashboard', 'users', 'courses', 'security'].map(tab => (
+             <button
+               key={tab}
+               onClick={() => setActiveTab(tab)}
+               style={{
+                 padding: '8px 16px',
+                 background: activeTab === tab ? 'var(--primary-500)' : 'var(--bg-secondary)',
+                 color: activeTab === tab ? '#fff' : 'var(--text-secondary)',
+                 border: '1px solid var(--border-color)',
+                 borderRadius: 'var(--radius-full)',
+                 fontSize: '13px',
+                 fontWeight: '600',
+                 cursor: 'pointer',
+                 whiteSpace: 'nowrap',
+                 transition: 'all 0.2s ease'
+               }}
+             >
+               {tab === 'security' ? '🔒 ' + tab.charAt(0).toUpperCase() + tab.slice(1) : tab.charAt(0).toUpperCase() + tab.slice(1)}
+             </button>
+           ))}
         </div>
 
         {/* Tab Content */}
@@ -235,6 +293,245 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
           </div>
         )}
 
+        {activeTab === 'security' && (
+          <div style={{ background: 'var(--glass-bg)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '700' }}>🔐 Device Owner Management</h3>
+            
+            {!isNativeApp ? (
+              <div style={{ padding: '16px', background: 'rgba(107, 114, 128, 0.1)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                  Device Owner management is only available in the native Android app.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div style={{ 
+                  padding: '16px', 
+                  background: isDeviceOwner ? 'rgba(99, 102, 241, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                  border: `1px solid ${isDeviceOwner ? 'var(--primary-500)' : 'var(--border-color)'}`
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px', color: 'var(--text-primary)' }}>
+                        Device Owner Status
+                      </p>
+                      <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        {isDeviceOwner 
+                          ? 'Device is currently set as Device Owner. App has full device control.' 
+                          : 'Device Owner mode is not active. Device has normal permissions.'}
+                      </p>
+                    </div>
+                    <div style={{ 
+                      padding: '8px 16px', 
+                      borderRadius: '6px',
+                      background: isDeviceOwner ? 'var(--danger)' : 'var(--bg-tertiary)',
+                      color: isDeviceOwner ? '#fff' : 'var(--text-secondary)',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}>
+                      {isDeviceOwner ? '🔒 ACTIVE' : '🔓 INACTIVE'}
+                    </div>
+                  </div>
+
+                  {isDeviceOwner && (
+                    <button
+                      onClick={() => {
+                        setShowDeviceOwnerDialog(true);
+                        setDeviceOwnerPassword('');
+                        setDeviceOwnerError('');
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 16px',
+                        background: 'var(--danger)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease',
+                        marginTop: '12px'
+                      }}
+                    >
+                      Disable Device Owner
+                    </button>
+                  )}
+                </div>
+
+                <div style={{
+                  padding: '16px',
+                  background: 'var(--bg-primary)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)'
+                }}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                    <strong>About Device Owner:</strong>
+                  </p>
+                  <ul style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '16px', margin: 0 }}>
+                    <li>When enabled, the app has privileged access to device settings</li>
+                    <li>Allows enforcement of kiosk mode and screen pinning</li>
+                    <li>Disabling restores normal device permissions</li>
+                    <li>Requires admin password for security</li>
+                  </ul>
+                </div>
+
+                <div style={{ marginTop: '16px' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>System Status</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '12px' }}>
+                    <div style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                      <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Device Owner</p>
+                      <p style={{ fontSize: '16px', fontWeight: '600', color: isDeviceOwner ? 'var(--success)' : 'var(--text-secondary)' }}>
+                        {isDeviceOwner ? '✓ Enabled' : '✗ Disabled'}
+                      </p>
+                    </div>
+                    <div style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                      <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Kiosk Mode</p>
+                      <p style={{ fontSize: '16px', fontWeight: '600', color: kioskActive ? 'var(--success)' : 'var(--text-secondary)' }}>
+                        {kioskActive ? '✓ Active' : '✗ Inactive'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Device Owner Disable Dialog */}
+        {showDeviceOwnerDialog && (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '16px'
+      }}>
+        <div style={{
+          background: 'var(--bg-secondary)',
+          borderRadius: '12px',
+          padding: '24px',
+          maxWidth: '400px',
+          width: '100%',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <div style={{ 
+              width: '60px', 
+              height: '60px', 
+              borderRadius: '50%', 
+              background: 'rgba(239, 68, 68, 0.1)',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              margin: '0 auto 12px',
+              fontSize: '28px'
+            }}>
+              ⚠️
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: 'var(--text-primary)' }}>
+              Disable Device Owner
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              This will remove Device Owner restrictions and restore normal device permissions.
+            </p>
+          </div>
+
+          <form onSubmit={handleDisableDeviceOwner}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '12px', 
+                fontWeight: '600', 
+                marginBottom: '6px',
+                color: 'var(--text-secondary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Admin Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter admin password"
+                value={deviceOwnerPassword}
+                onChange={(e) => {
+                  setDeviceOwnerPassword(e.target.value);
+                  setDeviceOwnerError('');
+                }}
+                autoFocus
+                disabled={isDisablingDeviceOwner}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: deviceOwnerError ? '1px solid var(--danger)' : '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  background: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  fontSize: '14px',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+              {deviceOwnerError && (
+                <p style={{ fontSize: '12px', color: 'var(--danger)', marginTop: '6px' }}>
+                  {deviceOwnerError}
+                </p>
+              )}
+              <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
+                Default: admin1234
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setShowDeviceOwnerDialog(false)}
+                disabled={isDisablingDeviceOwner}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: 'var(--bg-primary)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isDisablingDeviceOwner}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: isDisablingDeviceOwner ? 'var(--danger-dark)' : 'var(--danger)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: isDisablingDeviceOwner ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+              >
+                {isDisablingDeviceOwner ? 'Disabling...' : 'Disable'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
       </div>
     </div>
   );

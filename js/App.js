@@ -282,21 +282,6 @@ function LearnoraApp() {
     );
   }
 
-  // Admin Portal
-  if (userRole === 'admin') {
-    return (
-      <>
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          isVisible={toast.visible} 
-          onClose={() => setToast({ ...toast, visible: false })} 
-        />
-        <AdminPortal onLogout={handleLogout} showToast={showToast} />
-      </>
-    );
-  }
-
   // Main App (Student Portal)
   return (
     <div style={{ 
@@ -343,6 +328,17 @@ function LearnoraApp() {
         maxWidth: '100vw',
         overflowX: 'hidden'
       }}>
+        {/* Admin Portal - Rendered for admin role */}
+        {userRole === 'admin' && (
+          <AdminPortal 
+            onLogout={handleLogout}
+            showToast={showToast}
+          />
+        )}
+
+        {/* Regular views - Not rendered for admin */}
+        {userRole !== 'admin' && (
+          <>
         {currentView === 'dashboard' && (
           <DashboardView 
             courses={courses}
@@ -435,6 +431,8 @@ function LearnoraApp() {
         )}
 
         {currentView === 'ai-tutor' && <AITutorView />}
+          </>
+        )}
       </main>
 
       {/* Modals */}

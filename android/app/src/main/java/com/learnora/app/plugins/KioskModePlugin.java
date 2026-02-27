@@ -288,19 +288,96 @@ public class KioskModePlugin extends Plugin {
         call.resolve(result);
     }
 
-    @PluginMethod
-    public void isDeviceOwner(PluginCall call) {
-        Context context = getContext();
-        boolean isOwner = false;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            isOwner = devicePolicyManager.isDeviceOwnerApp(context.getPackageName());
-        }
-        JSObject result = new JSObject();
-        result.put("isDeviceOwner", isOwner);
-        call.resolve(result);
-    }
+     @PluginMethod
+     public void isDeviceOwner(PluginCall call) {
+         Context context = getContext();
+         boolean isOwner = false;
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+             isOwner = devicePolicyManager.isDeviceOwnerApp(context.getPackageName());
+         }
+         JSObject result = new JSObject();
+         result.put("isDeviceOwner", isOwner);
+         call.resolve(result);
+     }
 
-    private void persistKioskState(boolean active) {
+     @PluginMethod
+     public void clearDeviceOwner(PluginCall call) {
+         String password = call.getString("password");
+
+         if (password == null || password.isEmpty()) {
+             JSObject result = new JSObject();
+             result.put("success", false);
+             result.put("message", "Password is required to disable Device Owner");
+             call.resolve(result);
+             return;
+         }
+
+         if (!verifyPassword(password)) {
+             JSObject result = new JSObject();
+             result.put("success", false);
+             result.put("message", "Incorrect password");
+             call.resolve(result);
+             return;
+         }
+
+         try {
+             Context context = getContext();
+             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                 if (devicePolicyManager.isDeviceOwnerApp(context.getPackageName())) {
+                     // First disable kiosk mode if active
+                     if (isKioskModeActive) {
+                         Activity activity = getActivity();
+                         if (activity != null) {
+                             activity.runOnUiThread(() -> {
+                                 try {
+                                     activity.stopLockTask();
+                                     removeKioskFlags(activity);
+                                 } catch (Exception e) {
+                                     Log.e(TAG, "Error stopping lock task", e);
+                                 }
+                             });
+                         }
+                         isKioskModeActive = false;
+                         persistKioskState(false);
+                     }
+
+                     // Clear Device Owner - this requires the device to be already set as Device Owner
+                     // Note: Once cleared via this method, the app will no longer be device owner
+                     devicePolicyManager.clearDeviceOwnerApp(context.getPackageName());
+                     Log.i(TAG, "Device Owner status cleared successfully");
+
+                     JSObject result = new JSObject();
+                     result.put("success", true);
+                     result.put("message", "Device Owner status cleared. Device is now unrestricted.");
+                     call.resolve(result);
+                 } else {
+                     JSObject result = new JSObject();
+                     result.put("success", false);
+                     result.put("message", "App is not currently Device Owner");
+                     call.resolve(result);
+                 }
+             } else {
+                 JSObject result = new JSObject();
+                 result.put("success", false);
+                 result.put("message", "Device Owner API not available on this Android version");
+                 call.resolve(result);
+             }
+         } catch (SecurityException e) {
+             Log.e(TAG, "Security exception clearing device owner", e);
+             JSObject result = new JSObject();
+             result.put("success", false);
+             result.put("message", "Security error: " + e.getMessage());
+             call.resolve(result);
+         } catch (Exception e) {
+             Log.e(TAG, "Error clearing device owner", e);
+             JSObject result = new JSObject();
+             result.put("success", false);
+             result.put("message", "Error: " + e.getMessage());
+             call.resolve(result);
+         }
+     }
+
+     private void persistKioskState(boolean active) {
         try {
             SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             prefs.edit().putBoolean(KEY_KIOSK_ACTIVE, active).apply();

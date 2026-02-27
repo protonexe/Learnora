@@ -13,6 +13,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
+  const [loginError, setLoginError] = React.useState('');
   const { theme, toggleTheme } = useTheme();
 
   React.useEffect(() => {
@@ -120,6 +121,10 @@ const LoginView = ({ onAuthenticate, showToast }) => {
     ],
     parent: [
       { username: 'parent.wilson', password: 'parent123', name: 'John Wilson' },
+    ],
+    admin: [
+      { username: 'admin', password: 'admin1234', name: 'Administrator' },
+      { username: 'admin.root', password: 'admin1234', name: 'Root Admin' },
     ]
   };
 
@@ -127,11 +132,16 @@ const LoginView = ({ onAuthenticate, showToast }) => {
     { id: 'student', label: 'Student', description: 'Access your courses' },
     { id: 'teacher', label: 'Teacher', description: 'Manage classes' },
     { id: 'parent', label: 'Parent', description: 'Track progress' },
+    { id: 'admin', label: 'Admin', description: 'System administration' },
   ];
 
   const validateCredentials = (role, user, pass) => {
+    console.log('[LOGIN] validateCredentials called with:', { role, user, passLength: pass?.length });
     const roleCredentials = credentials[role] || [];
-    return roleCredentials.some(cred => cred.username === user && cred.password === pass);
+    console.log('[LOGIN] Found credentials for role:', { role, count: roleCredentials.length, credentials: roleCredentials.map(c => c.username) });
+    const result = roleCredentials.some(cred => cred.username === user && cred.password === pass);
+    console.log('[LOGIN] Validation result:', result);
+    return result;
   };
 
   const enableKioskMode = async (role) => {
@@ -141,35 +151,65 @@ const LoginView = ({ onAuthenticate, showToast }) => {
       const result = await window.NativePlugins.KioskMode.enable();
       if (result.success) {
         setKioskEnabled(true);
-        showToast('Device locked to Learnora', 'info');
+        if (result.pinned) {
+          showToast('Screen Pinned. Run ADB Device Owner script for True Kiosk Mode.', 'warning');
+        } else {
+          showToast('Device locked to Learnora (True Kiosk)', 'success');
+        }
       } else {
         if (result.message && result.message.includes('device owner')) {
           showToast('Kiosk mode requires device owner setup. See admin guide.', 'warning');
+        } else {
+          showToast('Failed to enable Kiosk Mode: ' + result.message, 'error');
         }
       }
     }
   };
 
   const handlePasswordLogin = (e) => {
+    console.log('[LOGIN] handlePasswordLogin called');
     e.preventDefault();
+    console.log('[LOGIN] Event prevented');
 
     if (!username.trim() || !password.trim()) {
+      console.log('[LOGIN] Form validation failed - empty fields');
       showToast('Please enter username and password', 'warning');
+      setLoginError('Please enter both username and password');
       return;
     }
 
+    setLoginError('');
+    console.log('[LOGIN] Form validation passed, setting isLoading to true');
     setIsLoading(true);
     
+    const checkStart = Date.now();
+    console.log('[LOGIN] Starting async validation at', checkStart);
+    
     setTimeout(async () => {
-      if (validateCredentials(selectedRole, username, password)) {
+      const elapsedMs = Date.now() - checkStart;
+      console.log('[LOGIN] Async timeout fired after', elapsedMs, 'ms');
+      console.log('[LOGIN] About to validate:', { selectedRole, username, passwordLength: password.length });
+      
+      const isValid = validateCredentials(selectedRole, username, password);
+      console.log('[LOGIN] Validation complete:', isValid);
+      
+      if (isValid) {
+        console.log('[LOGIN] Credentials valid! Enabling kiosk mode for role:', selectedRole);
+        setLoginError('');
         await enableKioskMode(selectedRole);
+        console.log('[LOGIN] Kiosk mode complete, calling onAuthenticate with role:', selectedRole);
         onAuthenticate(selectedRole);
+        console.log('[LOGIN] onAuthenticate called successfully');
         showToast(`Welcome back!`, 'success');
         setUsername('');
         setPassword('');
+        console.log('[LOGIN] Form cleared');
       } else {
+        console.log('[LOGIN] Credentials invalid - showing error');
+        setLoginError('Invalid username or password. Please check your credentials.');
         showToast('Invalid username or password', 'error');
       }
+      console.log('[LOGIN] Setting isLoading to false');
       setIsLoading(false);
     }, 800);
   };
@@ -334,7 +374,10 @@ const LoginView = ({ onAuthenticate, showToast }) => {
               </div>
             </div>
 
-            <form onSubmit={handlePasswordLogin}>
+            <form onSubmit={(e) => {
+              console.log('[LOGIN] Form onSubmit triggered');
+              handlePasswordLogin(e);
+            }}>
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ 
                   display: 'block', 
@@ -349,7 +392,10 @@ const LoginView = ({ onAuthenticate, showToast }) => {
                   type="text"
                   placeholder="Enter username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setLoginError('');
+                  }}
                   autoFocus
                   style={{
                     width: '100%',
@@ -377,11 +423,14 @@ const LoginView = ({ onAuthenticate, showToast }) => {
                   type="password"
                   placeholder="Enter password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setLoginError('');
+                  }}
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: '1px solid var(--border-color)',
+                    border: loginError ? '1px solid var(--danger)' : '1px solid var(--border-color)',
                     borderRadius: '8px',
                     background: 'var(--bg-secondary)',
                     color: 'var(--text-primary)',
@@ -389,6 +438,17 @@ const LoginView = ({ onAuthenticate, showToast }) => {
                     outline: 'none'
                   }}
                 />
+                {loginError && (
+                  <p style={{ 
+                    color: 'var(--danger)', 
+                    fontSize: '12px', 
+                    marginTop: '8px', 
+                    textAlign: 'center',
+                    fontWeight: 500
+                  }}>
+                    {loginError}
+                  </p>
+                )}
               </div>
 
               <Button 
@@ -433,6 +493,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
               <p>Student: emma.wilson / pass123</p>
               <p>Teacher: mr.johnson / teacher123</p>
               <p>Parent: parent.wilson / parent123</p>
+              <p>Admin: admin / admin1234</p>
             </div>
           </>
         ) : (
@@ -672,7 +733,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
                   Demo Mode - Click to simulate NFC scan
                 </p>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  {['student', 'teacher', 'parent'].map(role => (
+                  {['student', 'teacher', 'parent', 'admin'].map(role => (
                     <button 
                       key={role}
                       onClick={() => simulateNFCDemo(role)}
