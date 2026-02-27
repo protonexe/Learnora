@@ -21,10 +21,10 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
   }, []);
 
   const checkDeviceStatus = async () => {
-    const native = window.NativePlugins && window.NativePlugins.isNative();
-    setIsNativeApp(native);
+    const native = window.NativePlugins && window.NativePlugins.isNative && window.NativePlugins.isNative();
+    setIsNativeApp(!!native);
     
-    if (native) {
+    if (native && window.NativePlugins && window.NativePlugins.KioskMode) {
       try {
         const kioskResult = await window.NativePlugins.KioskMode.isActive();
         setKioskActive(kioskResult.active);
@@ -34,6 +34,11 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
       } catch (err) {
         console.error('Error checking device status:', err);
       }
+    } else {
+      // Web browser - no native plugins
+      setIsNativeApp(false);
+      setIsDeviceOwner(false);
+      setKioskActive(false);
     }
   };
 
@@ -62,6 +67,12 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
     
     if (!deviceOwnerPassword.trim()) {
       setDeviceOwnerError('Please enter password');
+      return;
+    }
+
+    // Check if native plugins are available
+    if (!window.NativePlugins || !window.NativePlugins.KioskMode || !window.NativePlugins.KioskMode.clearDeviceOwner) {
+      setDeviceOwnerError('Device Owner management is only available in the native Android app, not in web browser');
       return;
     }
 
@@ -335,7 +346,7 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
                     </div>
                   </div>
 
-                  {isDeviceOwner && (
+                  {isNativeApp && isDeviceOwner && (
                     <button
                       onClick={() => {
                         setShowDeviceOwnerDialog(true);

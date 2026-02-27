@@ -21,10 +21,13 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
   }, []);
 
   const checkDeviceStatus = async () => {
-    const native = window.NativePlugins && window.NativePlugins.isNative();
-    setIsNativeApp(native);
+    // Check if running in native app (Capacitor)
+    const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+    const hasNativePlugins = window.NativePlugins && typeof window.NativePlugins.KioskMode !== 'undefined';
     
-    if (native) {
+    setIsNativeApp(!!isNative || !!hasNativePlugins);
+    
+    if ((isNative || hasNativePlugins) && window.NativePlugins && window.NativePlugins.KioskMode) {
       try {
         const kioskResult = await window.NativePlugins.KioskMode.isActive();
         setKioskActive(kioskResult.active);
@@ -33,7 +36,15 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
         setIsDeviceOwner(ownerResult.isDeviceOwner);
       } catch (err) {
         console.error('Error checking device status:', err);
+        setIsNativeApp(false);
+        setIsDeviceOwner(false);
+        setKioskActive(false);
       }
+    } else {
+      // Not native or plugins not available
+      setIsNativeApp(false);
+      setIsDeviceOwner(false);
+      setKioskActive(false);
     }
   };
 
@@ -65,27 +76,8 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
       return;
     }
 
-    setIsDisablingDeviceOwner(true);
-    setDeviceOwnerError('');
-
-    try {
-      const result = await window.NativePlugins.KioskMode.clearDeviceOwner({
-        password: deviceOwnerPassword
-      });
-
-      if (result.success) {
-        showToast('Device Owner status cleared successfully', 'success');
-        setIsDeviceOwner(false);
-        setShowDeviceOwnerDialog(false);
-        setDeviceOwnerPassword('');
-      } else {
-        setDeviceOwnerError(result.message || 'Failed to clear Device Owner');
-      }
-    } catch (err) {
-      setDeviceOwnerError(err.message || 'Error clearing Device Owner');
-    } finally {
-      setIsDisablingDeviceOwner(false);
-    }
+    showToast('Device Owner removal requires manual steps. See instructions below.', 'warning');
+    setShowDeviceOwnerDialog(false);
   };
 
   const adminStats = [
@@ -335,7 +327,7 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
                     </div>
                   </div>
 
-                  {isDeviceOwner && (
+                  {isNativeApp && isDeviceOwner && (
                     <button
                       onClick={() => {
                         setShowDeviceOwnerDialog(true);
@@ -368,14 +360,14 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
                   border: '1px solid var(--border-color)'
                 }}>
                   <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                    <strong>About Device Owner:</strong>
+                    <strong>How to Remove Device Owner:</strong>
                   </p>
-                  <ul style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '16px', margin: 0 }}>
-                    <li>When enabled, the app has privileged access to device settings</li>
-                    <li>Allows enforcement of kiosk mode and screen pinning</li>
-                    <li>Disabling restores normal device permissions</li>
-                    <li>Requires admin password for security</li>
-                  </ul>
+                  <ol style={{ fontSize: '11px', color: 'var(--text-secondary)', paddingLeft: '16px', margin: 0, lineHeight: '1.6' }}>
+                    <li style={{marginBottom: '8px'}}><strong>Option 1:</strong> Settings → Security → Device Admins → Learnora → Deactivate</li>
+                    <li style={{marginBottom: '8px'}}><strong>Option 2 (ADB):</strong> Connect device, run:<br/>
+                    <code style={{background: '#222', padding: '2px 6px', borderRadius: '4px', fontSize: '10px'}}>adb shell dpm remove-active-admin com.learnora.app/.KioskDeviceAdminReceiver</code></li>
+                    <li><strong>Option 3:</strong> Factory reset device</li>
+                  </ol>
                 </div>
 
                 <div style={{ marginTop: '16px' }}>

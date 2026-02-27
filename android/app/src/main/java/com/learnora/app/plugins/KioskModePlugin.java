@@ -317,65 +317,86 @@ public class KioskModePlugin extends Plugin {
              result.put("success", false);
              result.put("message", "Incorrect password");
              call.resolve(result);
-             return;
-         }
+              return;
+          }
 
-         try {
-             Context context = getContext();
-             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                 if (devicePolicyManager.isDeviceOwnerApp(context.getPackageName())) {
-                     // First disable kiosk mode if active
-                     if (isKioskModeActive) {
-                         Activity activity = getActivity();
-                         if (activity != null) {
-                             activity.runOnUiThread(() -> {
-                                 try {
-                                     activity.stopLockTask();
-                                     removeKioskFlags(activity);
-                                 } catch (Exception e) {
-                                     Log.e(TAG, "Error stopping lock task", e);
-                                 }
-                             });
-                         }
-                         isKioskModeActive = false;
-                         persistKioskState(false);
-                     }
+          try {
+              Context context = getContext();
+              String packageName = context.getPackageName();
+              
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                  if (devicePolicyManager.isDeviceOwnerApp(packageName)) {
+                      // First disable kiosk mode if active
+                      if (isKioskModeActive) {
+                          Activity activity = getActivity();
+                          if (activity != null) {
+                              activity.runOnUiThread(() -> {
+                                  try {
+                                      activity.stopLockTask();
+                                      removeKioskFlags(activity);
+                                  } catch (Exception e) {
+                                      Log.e(TAG, "Error stopping lock task", e);
+                                  }
+                              });
+                          }
+                          isKioskModeActive = false;
+                          persistKioskState(false);
+                      }
 
-                     // Clear Device Owner - this requires the device to be already set as Device Owner
-                     // Note: Once cleared via this method, the app will no longer be device owner
-                     devicePolicyManager.clearDeviceOwnerApp(context.getPackageName());
-                     Log.i(TAG, "Device Owner status cleared successfully");
+                      boolean removed = false;
+                      String message = "";
+                      
+                      // Method 1: Remove as active admin first
+                      try {
+                          if (devicePolicyManager.isAdminActive(adminComponent)) {
+                              devicePolicyManager.removeActiveAdmin(adminComponent);
+                              Log.i(TAG, "Active admin removed successfully");
+                              removed = true;
+                          }
+                      } catch (Exception e) {
+                          Log.w(TAG, "removeActiveAdmin failed: " + e.getMessage());
+                          message += "removeActiveAdmin failed. ";
+                      }
 
-                     JSObject result = new JSObject();
-                     result.put("success", true);
-                     result.put("message", "Device Owner status cleared. Device is now unrestricted.");
-                     call.resolve(result);
-                 } else {
-                     JSObject result = new JSObject();
-                     result.put("success", false);
-                     result.put("message", "App is not currently Device Owner");
-                     call.resolve(result);
-                 }
-             } else {
-                 JSObject result = new JSObject();
-                 result.put("success", false);
-                 result.put("message", "Device Owner API not available on this Android version");
-                 call.resolve(result);
-             }
-         } catch (SecurityException e) {
-             Log.e(TAG, "Security exception clearing device owner", e);
-             JSObject result = new JSObject();
-             result.put("success", false);
-             result.put("message", "Security error: " + e.getMessage());
-             call.resolve(result);
-         } catch (Exception e) {
-             Log.e(TAG, "Error clearing device owner", e);
-             JSObject result = new JSObject();
-             result.put("success", false);
-             result.put("message", "Error: " + e.getMessage());
-             call.resolve(result);
-         }
-     }
+                      // Method 2: Clear device owner app
+                      try {
+                          devicePolicyManager.clearDeviceOwnerApp(packageName);
+                          Log.i(TAG, "Device Owner cleared successfully");
+                          removed = true;
+                      } catch (Exception e) {
+                          Log.w(TAG, "clearDeviceOwnerApp failed: " + e.getMessage());
+                          message += "clearDeviceOwnerApp failed: " + e.getMessage();
+                      }
+
+                      JSObject result = new JSObject();
+                      if (removed) {
+                          result.put("success", true);
+                          result.put("message", "Device Owner and Admin permissions removed! You can now uninstall the app normally.");
+                      } else {
+                          result.put("success", false);
+                          result.put("message", "Could not automatically remove. " + message + " Please use ADB or manual removal.");
+                      }
+                      call.resolve(result);
+                  } else {
+                      JSObject result = new JSObject();
+                      result.put("success", false);
+                      result.put("message", "App is not currently Device Owner");
+                      call.resolve(result);
+                  }
+              } else {
+                  JSObject result = new JSObject();
+                  result.put("success", false);
+                  result.put("message", "Device Owner API not available on this Android version");
+                  call.resolve(result);
+              }
+          } catch (Exception e) {
+              Log.e(TAG, "Error in clearDeviceOwner", e);
+              JSObject result = new JSObject();
+              result.put("success", false);
+              result.put("message", "Error: " + e.getMessage());
+              call.resolve(result);
+          }
+      }
 
      private void persistKioskState(boolean active) {
         try {
