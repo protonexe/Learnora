@@ -351,6 +351,7 @@ function LearnoraApp() {
             onOpenQuiz={handleOpenQuiz}
             onOpenFlashcards={handleOpenFlashcards}
             onOpenAIChat={() => setAiChatOpen(true)}
+            user={{ name: 'Student' }}
           />
         )}
 

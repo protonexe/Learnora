@@ -7,7 +7,8 @@ const DashboardView = ({
   onNavigate,
   onOpenQuiz,
   onOpenFlashcards,
-  onOpenAIChat
+  onOpenAIChat,
+  user
 }) => {
   const isMobile = window.innerWidth <= 768;
 
@@ -123,6 +124,9 @@ const DashboardView = ({
           </div>
         )}
       </div>
+
+      {/* Welcome Widget */}
+      <WelcomeWidget user={user} streak={streak} showToast={null} onNavigate={onNavigate} />
 
       {/* Quick Actions - Horizontal on desktop */}
       <div style={{

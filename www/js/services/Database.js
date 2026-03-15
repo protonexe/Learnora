@@ -695,6 +695,60 @@ class LocalDatabase {
     this.data.notifications = [];
     this.saveData();
   }
+
+  // ==================== UTILITY METHODS ====================
+  
+  exportDatabase() {
+    return JSON.stringify(this.data, null, 2);
+  }
+
+  importDatabase(jsonString) {
+    try {
+      const imported = JSON.parse(jsonString);
+      this.data = { ...this.data, ...imported };
+      this.saveData();
+      return true;
+    } catch (e) {
+      console.error('Import failed:', e);
+      return false;
+    }
+  }
+
+  clearDatabase() {
+    this.data = {
+      users: [],
+      courses: [],
+      assignments: [],
+      stats: [],
+      analytics: null,
+      quizzes: [],
+      flashcards: [],
+      classes: [],
+      studentGrades: [],
+      studentProgress: {},
+      chapters: [],
+      quizResults: {},
+      flashcardDecks: [],
+      announcements: [],
+      calendarEvents: [],
+      progressReports: {},
+      notifications: [],
+      studentGrades: []
+    };
+    this.saveData();
+  }
+
+  getDatabaseStats() {
+    return {
+      users: this.data.users?.length || 0,
+      courses: this.data.courses?.length || 0,
+      quizzes: this.data.quizzes?.length || 0,
+      flashcards: this.data.flashcardDecks?.length || 0,
+      assignments: this.data.assignments?.length || 0,
+      announcements: this.data.announcements?.length || 0,
+      events: this.data.calendarEvents?.length || 0
+    };
+  }
 }
 
 window.LocalDatabase = LocalDatabase;
