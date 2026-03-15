@@ -544,6 +544,116 @@ class LocalDatabase {
   getGradesForClass(classId) {
     return (this.data.studentGrades || []).filter(g => g.classId === classId);
   }
+
+  // ==================== ENROLLMENT METHODS ====================
+  
+  enrollStudentInCourse(studentId, courseId) {
+    const course = this.getCourseById(courseId);
+    if (course) {
+      if (!course.enrolledStudents) course.enrolledStudents = [];
+      if (!course.enrolledStudents.includes(studentId)) {
+        course.enrolledStudents.push(studentId);
+        course.students = course.enrolledStudents.length;
+        this.saveData();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  unenrollStudentFromCourse(studentId, courseId) {
+    const course = this.getCourseById(courseId);
+    if (course && course.enrolledStudents) {
+      course.enrolledStudents = course.enrolledStudents.filter(id => id !== studentId);
+      course.students = course.enrolledStudents.length;
+      this.saveData();
+    }
+  }
+
+  getEnrolledCourses(studentId) {
+    return (this.data.courses || []).filter(c => 
+      c.enrolledStudents && c.enrolledStudents.includes(studentId)
+    );
+  }
+
+  // ==================== ANNOUNCEMENT METHODS ====================
+  
+  createAnnouncement(announcementData) {
+    const newAnnouncement = {
+      id: `announcement_${Date.now()}`,
+      ...announcementData,
+      createdAt: new Date().toISOString(),
+      views: 0
+    };
+    if (!this.data.announcements) this.data.announcements = [];
+    this.data.announcements.push(newAnnouncement);
+    this.saveData();
+    return newAnnouncement;
+  }
+
+  getAllAnnouncements() {
+    return this.data.announcements || [];
+  }
+
+  getAnnouncementsForCourse(courseId) {
+    return (this.data.announcements || []).filter(a => a.courseId === courseId);
+  }
+
+  deleteAnnouncement(id) {
+    this.data.announcements = (this.data.announcements || []).filter(a => a.id !== id);
+    this.saveData();
+  }
+
+  // ==================== CALENDAR METHODS ====================
+  
+  addCalendarEvent(eventData) {
+    const newEvent = {
+      id: `event_${Date.now()}`,
+      ...eventData,
+      createdAt: new Date().toISOString()
+    };
+    if (!this.data.calendarEvents) this.data.calendarEvents = [];
+    this.data.calendarEvents.push(newEvent);
+    this.saveData();
+    return newEvent;
+  }
+
+  getCalendarEvents(startDate, endDate) {
+    return (this.data.calendarEvents || []).filter(e => {
+      const eventDate = new Date(e.date);
+      return eventDate >= new Date(startDate) && eventDate <= new Date(endDate);
+    });
+  }
+
+  getAllCalendarEvents() {
+    return this.data.calendarEvents || [];
+  }
+
+  deleteCalendarEvent(id) {
+    this.data.calendarEvents = (this.data.calendarEvents || []).filter(e => e.id !== id);
+    this.saveData();
+  }
+
+  // ==================== PROGRESS REPORT METHODS ====================
+  
+  saveProgressReport(studentId, reportData) {
+    if (!this.data.progressReports) this.data.progressReports = {};
+    if (!this.data.progressReports[studentId]) this.data.progressReports[studentId] = [];
+    
+    const report = {
+      id: `report_${Date.now()}`,
+      ...reportData,
+      generatedAt: new Date().toISOString()
+    };
+    
+    this.data.progressReports[studentId].push(report);
+    this.saveData();
+    return report;
+  }
+
+  getProgressReports(studentId) {
+    return this.data.progressReports?.[studentId] || [];
+  }
 }
 
 window.LocalDatabase = LocalDatabase;

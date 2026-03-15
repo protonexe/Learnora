@@ -1,7 +1,16 @@
-const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenAIChat }) => {
+const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenAIChat, userRole }) => {
   const isMobile = window.innerWidth <= 768;
 
   if (!isOpen) return null;
+
+  const teacherItems = [
+    { icon: 'book', label: 'Grade Book', view: 'gradebook' },
+    { icon: 'clipboard', label: 'Announcements', view: 'announcements' },
+  ];
+
+  const navItems = userRole === 'teacher' 
+    ? [...SampleData.navItems, ...teacherItems]
+    : SampleData.navItems;
 
   return (
     <>
@@ -48,7 +57,7 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenAIChat }) => 
           Navigation
         </p>
 
-        {SampleData.navItems.map((item, idx) => (
+        {navItems.map((item, idx) => (
           <button
             key={idx}
             onClick={() => {
