@@ -222,6 +222,54 @@ const SettingsView = ({
         )}
       </AnimatedCard>
 
+      {/* Data Management */}
+      <AnimatedCard delay={350}>
+        <div style={{ marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 4px 0' }}>Data Management</h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>Backup and restore your data</p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button 
+            onClick={() => {
+              if (window.DataManager) {
+                window.DataManager.exportData();
+                showToast('Data exported successfully!', 'success');
+              } else if (window.Database) {
+                const data = window.Database.exportDatabase();
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `learnora-backup-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                showToast('Data exported!', 'success');
+              }
+            }}
+            style={{ flex: 1, minWidth: '120px', padding: '12px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
+            📤 Export Data
+          </button>
+          <label style={{ flex: 1, minWidth: '120px', padding: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            📥 Import Data
+            <input type="file" accept=".json" style={{ display: 'none' }} onChange={(e) => {
+              const file = e.target.files[0];
+              if (file && window.Database) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  const success = window.Database.importDatabase(event.target.result);
+                  if (success) {
+                    showToast('Data imported! Refresh to see changes.', 'success');
+                  } else {
+                    showToast('Failed to import data', 'error');
+                  }
+                };
+                reader.readAsText(file);
+              }
+            }} />
+          </label>
+        </div>
+      </AnimatedCard>
+
       {/* Password Modal for Kiosk Exit */}
       <Modal 
         isOpen={showPasswordDialog} 
