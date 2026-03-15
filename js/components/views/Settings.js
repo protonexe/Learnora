@@ -114,6 +114,59 @@ const SettingsView = ({
               description="Easier on the eyes, especially at night" 
             />
           </div>
+
+          {/* Sound Settings */}
+          <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '2px' }}>🔔 Sound Effects</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Play sounds for notifications</div>
+              </div>
+              <Toggle 
+                checked={true}
+                onChange={() => showToast('Sound settings updated', 'success')}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {['Quiz Complete', 'Achievement', 'Timer Alert', 'Message'].map(sound => (
+                <button key={sound} style={{
+                  padding: '6px 12px',
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer'
+                }}>
+                  {sound}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notification Preferences */}
+          <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>📬 Notification Preferences</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { id: 'achievements', label: 'Achievements', desc: 'Badges and milestones', enabled: true },
+                { id: 'assignments', label: 'Assignments', desc: 'Due dates and submissions', enabled: true },
+                { id: 'reminders', label: 'Study Reminders', desc: 'Daily study prompts', enabled: false },
+                { id: 'messages', label: 'Messages', desc: 'Chat and announcements', enabled: true },
+              ].map(item => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{item.label}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{item.desc}</div>
+                  </div>
+                  <Toggle 
+                    checked={item.enabled}
+                    onChange={() => showToast(`${item.label} notifications updated`, 'success')}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
           
           <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
