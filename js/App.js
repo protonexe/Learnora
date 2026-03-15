@@ -23,6 +23,7 @@ function LearnoraApp() {
   const [selectedDeck, setSelectedDeck] = React.useState(null);
   const [selectedBook, setSelectedBook] = React.useState(null);
   const [aiChatOpen, setAiChatOpen] = React.useState(false);
+  const [searchOpen, setSearchOpen] = React.useState(false);
   
   // Mobile detection
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
@@ -307,6 +308,7 @@ function LearnoraApp() {
         setMenuOpen={setMenuOpen} 
         toggleTheme={toggleTheme} 
         theme={theme} 
+        onSearchClick={() => setSearchOpen(true)}
       />
 
       {/* Sidebar */}
@@ -592,6 +594,13 @@ function LearnoraApp() {
       <AIChat 
         isOpen={aiChatOpen} 
         onClose={() => setAiChatOpen(false)} 
+      />
+
+      {/* Global Search */}
+      <GlobalSearch
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onNavigate={handleNavigate}
       />
 
       {/* Floating AI Button */}

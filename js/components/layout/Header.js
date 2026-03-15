@@ -1,4 +1,4 @@
-const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme }) => {
+const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme, onSearchClick }) => {
   const isMobile = window.innerWidth <= 768;
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [notifications, setNotifications] = React.useState([]);
@@ -6,6 +6,17 @@ const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme }) => {
   React.useEffect(() => {
     loadNotifications();
   }, []);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        onSearchClick?.();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onSearchClick]);
 
   const loadNotifications = () => {
     if (window.Database) {
@@ -85,6 +96,25 @@ const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme }) => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '12px' }}>
+        <button
+          onClick={onSearchClick}
+          title="Search (Ctrl+K)"
+          style={{
+            background: 'var(--bg-tertiary)',
+            border: 'none',
+            width: isMobile ? '32px' : '44px',
+            height: isMobile ? '32px' : '44px',
+            borderRadius: 'var(--radius-md)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <Icon name="search" size={isMobile ? 14 : 18} color="var(--text-secondary)" />
+        </button>
+
         <button
           onClick={toggleTheme}
           style={{
