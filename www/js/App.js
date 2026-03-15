@@ -25,6 +25,7 @@ function LearnoraApp() {
   const [aiChatOpen, setAiChatOpen] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+  const [quickAddOpen, setQuickAddOpen] = React.useState(false);
   
   // Mobile detection
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
@@ -630,6 +631,36 @@ function LearnoraApp() {
       <KeyboardShortcuts
         isOpen={shortcutsOpen}
         onClose={() => setShortcutsOpen(false)}
+      />
+
+      {/* Quick Add Button */}
+      <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 997 }}>
+        <button
+          onClick={() => setQuickAddOpen(!quickAddOpen)}
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'var(--primary-500)',
+            border: 'none',
+            boxShadow: '0 4px 16px rgba(99, 102, 241, 0.4)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            color: '#fff'
+          }}
+        >
+          {quickAddOpen ? '✕' : '+'}
+        </button>
+      </div>
+
+      <QuickAdd
+        isOpen={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        onNavigate={handleNavigate}
+        showToast={showToast}
       />
 
       {/* Floating AI Button */}
