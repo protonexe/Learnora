@@ -1,5 +1,19 @@
 const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme }) => {
   const isMobile = window.innerWidth <= 768;
+  const [showNotifications, setShowNotifications] = React.useState(false);
+  const [notifications, setNotifications] = React.useState([]);
+
+  React.useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = () => {
+    if (window.Database) {
+      setNotifications(window.Database.getNotifications() || []);
+    }
+  };
+
+  const getUnreadCount = () => notifications.filter(n => !n.read).length;
 
   return (
     <header style={{
@@ -92,30 +106,59 @@ const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme }) => {
         {/* Hide Protected badge on mobile */}
         {!isMobile && <Badge variant="success" icon="lock">Protected</Badge>}
 
-        <button style={{
-          background: 'var(--bg-tertiary)',
-          border: 'none',
-          width: isMobile ? '32px' : '44px',
-          height: isMobile ? '32px' : '44px',
-          borderRadius: 'var(--radius-md)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative'
-        }}>
+        <button
+          onClick={() => { setShowNotifications(!showNotifications); loadNotifications(); }}
+          style={{
+            background: 'var(--bg-tertiary)',
+            border: 'none',
+            width: isMobile ? '32px' : '44px',
+            height: isMobile ? '32px' : '44px',
+            borderRadius: 'var(--radius-md)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative'
+          }}
+        >
           <Icon name="bell" size={isMobile ? 14 : 18} color="var(--text-secondary)" />
-          <span style={{
-            position: 'absolute',
-            top: isMobile ? '6px' : '8px',
-            right: isMobile ? '6px' : '8px',
-            width: isMobile ? '6px' : '8px',
-            height: isMobile ? '6px' : '8px',
-            background: 'var(--danger)',
-            borderRadius: '50%',
-            border: '2px solid var(--bg-secondary)'
-          }} />
+          {getUnreadCount() > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: isMobile ? '6px' : '8px',
+              right: isMobile ? '6px' : '8px',
+              width: isMobile ? '6px' : '8px',
+              height: isMobile ? '6px' : '8px',
+              background: 'var(--danger)',
+              borderRadius: '50%',
+              border: '2px solid var(--bg-secondary)'
+            }} />
+          )}
         </button>
+
+        {showNotifications && (
+          <div style={{ position: 'absolute', top: isMobile ? '56px' : '72px', right: '20px', width: '320px', maxHeight: '400px', overflowY: 'auto', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: 'var(--shadow-xl)', zIndex: 200 }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Notifications</h3>
+              <button onClick={() => { window.Database?.markAllNotificationsRead(); loadNotifications(); }} style={{ background: 'transparent', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '12px' }}>Mark all read</button>
+            </div>
+            {notifications.length === 0 && (
+              <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>No notifications</div>
+            )}
+            {notifications.slice(0, 10).map((notif, idx) => (
+              <div key={notif.id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', background: notif.read ? 'transparent' : 'var(--primary-500)10', cursor: 'pointer' }} onClick={() => { window.Database?.markNotificationRead(notif.id); loadNotifications(); }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '20px' }}>{notif.icon || '🔔'}</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px 0' }}>{notif.title}</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>{notif.message}</p>
+                    <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: '4px 0 0 0' }}>{new Date(notif.createdAt).toLocaleTimeString()}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <Avatar name="John Doe" size={isMobile ? 32 : 44} />
       </div>

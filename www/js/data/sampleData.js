@@ -67,6 +67,8 @@ const SampleData = {
     { icon: 'clipboard', label: 'Announcements', view: 'announcements' },
     { icon: 'users', label: 'Enrollment', view: 'enrollment' },
     { icon: 'trending-up', label: 'Progress', view: 'progress-report' },
+    { icon: 'award', label: 'Achievements', view: 'achievements' },
+    { icon: 'trophy', label: 'Leaderboard', view: 'leaderboard' },
     { icon: 'message-circle', label: 'AI Tutor', view: 'ai-tutor' },
     { icon: 'settings', label: 'Settings', view: 'settings' },
   ],

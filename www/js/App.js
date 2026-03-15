@@ -316,6 +316,7 @@ function LearnoraApp() {
         currentView={currentView} 
         onNavigate={handleNavigate}
         onOpenAIChat={() => setAiChatOpen(true)}
+        userRole={userRole}
       />
 
       {/* Main Content */}
@@ -431,6 +432,58 @@ function LearnoraApp() {
         )}
 
         {currentView === 'ai-tutor' && <AITutorView />}
+
+        {currentView === 'enrollment' && (
+          <EnrollmentView 
+            onBack={() => handleNavigate('dashboard')}
+            onNavigate={handleNavigate}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'gradebook' && (
+          <GradeBookView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'announcements' && (
+          <AnnouncementsView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+            isTeacher={userRole === 'teacher'}
+          />
+        )}
+
+        {currentView === 'calendar' && (
+          <CalendarView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+            isTeacher={userRole === 'teacher'}
+          />
+        )}
+
+        {currentView === 'progress-report' && (
+          <ProgressReportView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'achievements' && (
+          <AchievementsView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'leaderboard' && (
+          <LeaderboardView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
           </>
         )}
       </main>

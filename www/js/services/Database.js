@@ -654,6 +654,47 @@ class LocalDatabase {
   getProgressReports(studentId) {
     return this.data.progressReports?.[studentId] || [];
   }
+
+  // ==================== NOTIFICATION METHODS ====================
+  
+  addNotification(notificationData) {
+    const notification = {
+      id: `notif_${Date.now()}`,
+      ...notificationData,
+      createdAt: new Date().toISOString(),
+      read: false
+    };
+    if (!this.data.notifications) this.data.notifications = [];
+    this.data.notifications.unshift(notification);
+    this.saveData();
+    return notification;
+  }
+
+  getNotifications() {
+    return this.data.notifications || [];
+  }
+
+  markNotificationRead(id) {
+    const notif = (this.data.notifications || []).find(n => n.id === id);
+    if (notif) {
+      notif.read = true;
+      this.saveData();
+    }
+  }
+
+  markAllNotificationsRead() {
+    (this.data.notifications || []).forEach(n => n.read = true);
+    this.saveData();
+  }
+
+  getUnreadCount() {
+    return (this.data.notifications || []).filter(n => !n.read).length;
+  }
+
+  clearNotifications() {
+    this.data.notifications = [];
+    this.saveData();
+  }
 }
 
 window.LocalDatabase = LocalDatabase;

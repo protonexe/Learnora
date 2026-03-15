@@ -470,6 +470,20 @@ function LearnoraApp() {
             showToast={showToast}
           />
         )}
+
+        {currentView === 'achievements' && (
+          <AchievementsView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'leaderboard' && (
+          <LeaderboardView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
           </>
         )}
       </main>
