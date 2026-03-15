@@ -2,6 +2,7 @@ const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme, onSearchClick }) =>
   const isMobile = window.innerWidth <= 768;
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [notifications, setNotifications] = React.useState([]);
+  const [activeTab, setActiveTab] = React.useState('all');
 
   React.useEffect(() => {
     loadNotifications();
@@ -12,6 +13,10 @@ const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme, onSearchClick }) =>
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         onSearchClick?.();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowNotifications(prev => !prev);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -25,6 +30,32 @@ const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme, onSearchClick }) =>
   };
 
   const getUnreadCount = () => notifications.filter(n => !n.read).length;
+  
+  const filteredNotifications = activeTab === 'all' 
+    ? notifications 
+    : notifications.filter(n => n.type === activeTab);
+    
+  const notificationTypes = [
+    { id: 'all', label: 'All', icon: '📋' },
+    { id: 'achievement', label: 'Achievements', icon: '🏆' },
+    { id: 'assignment', label: 'Assignments', icon: '📝' },
+    { id: 'course', label: 'Courses', icon: '📚' },
+    { id: 'reminder', label: 'Reminders', icon: '🔔' },
+  ];
+
+  const getNotificationIcon = (type) => {
+    const icons = {
+      achievement: '🏆',
+      assignment: '📝',
+      course: '📚',
+      reminder: '🔔',
+      quiz: '📋',
+      streak: '🔥',
+      message: '💬',
+      announcement: '📢'
+    };
+    return icons[type] || '📌';
+  };
 
   return (
     <header style={{
@@ -167,26 +198,71 @@ const Header = ({ menuOpen, setMenuOpen, toggleTheme, theme, onSearchClick }) =>
         </button>
 
         {showNotifications && (
-          <div style={{ position: 'absolute', top: isMobile ? '56px' : '72px', right: '20px', width: '320px', maxHeight: '400px', overflowY: 'auto', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: 'var(--shadow-xl)', zIndex: 200 }}>
-            <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Notifications</h3>
-              <button onClick={() => { window.Database?.markAllNotificationsRead(); loadNotifications(); }} style={{ background: 'transparent', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '12px' }}>Mark all read</button>
+          <div style={{ position: 'absolute', top: isMobile ? '56px' : '72px', right: '20px', width: isMobile ? '95vw' : '380px', maxHeight: '500px', overflow: 'hidden', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', boxShadow: 'var(--shadow-xl)', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Notifications</h3>
+                <button onClick={() => { window.Database?.markAllNotificationsRead(); loadNotifications(); }} style={{ background: 'transparent', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Mark all read</button>
+              </div>
+              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+                {notificationTypes.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    style={{
+                      padding: '6px 12px',
+                      background: activeTab === tab.id ? 'var(--primary-500)' : 'var(--bg-tertiary)',
+                      border: 'none',
+                      borderRadius: '20px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      color: activeTab === tab.id ? '#fff' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {tab.icon} {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            {notifications.length === 0 && (
-              <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>No notifications</div>
-            )}
-            {notifications.slice(0, 10).map((notif, idx) => (
-              <div key={notif.id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', background: notif.read ? 'transparent' : 'var(--primary-500)10', cursor: 'pointer' }} onClick={() => { window.Database?.markNotificationRead(notif.id); loadNotifications(); }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '20px' }}>{notif.icon || '🔔'}</span>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px 0' }}>{notif.title}</p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>{notif.message}</p>
-                    <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: '4px 0 0 0' }}>{new Date(notif.createdAt).toLocaleTimeString()}</p>
+            <div style={{ flex: 1, overflowY: 'auto', maxHeight: '350px' }}>
+              {filteredNotifications.length === 0 && (
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '40px', display: 'block', marginBottom: '12px' }}>🔔</span>
+                  <p style={{ margin: 0, fontSize: '14px' }}>No notifications</p>
+                </div>
+              )}
+              {filteredNotifications.slice(0, 15).map((notif, idx) => (
+                <div 
+                  key={notif.id || idx} 
+                  style={{ 
+                    padding: '14px 16px', 
+                    borderBottom: '1px solid var(--border-color)', 
+                    background: notif.read ? 'transparent' : 'var(--primary-500)08', 
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }} 
+                  onClick={() => { window.Database?.markNotificationRead(notif.id); loadNotifications(); }}
+                >
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '22px' }}>{notif.icon || getNotificationIcon(notif.type)}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px 0', color: 'var(--text-primary)' }}>{notif.title}</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>{notif.message}</p>
+                      <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: '6px 0 0 0' }}>{new Date(notif.createdAt || Date.now()).toLocaleString()}</p>
+                    </div>
+                    {!notif.read && (
+                      <div style={{ width: '8px', height: '8px', background: 'var(--primary-500)', borderRadius: '50%', flexShrink: 0, marginTop: '4px' }} />
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 

@@ -455,6 +455,7 @@ function LearnoraApp() {
             streak={streak}
             onLogout={handleLogout}
             onRestartOnboarding={handleRestartOnboarding}
+            showToast={showToast}
           />
         )}
 

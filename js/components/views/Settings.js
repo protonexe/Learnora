@@ -2,7 +2,8 @@ const SettingsView = ({
   educationMode, 
   streak, 
   onLogout, 
-  onRestartOnboarding 
+  onRestartOnboarding,
+  showToast
 }) => {
   const { theme, toggleTheme } = useTheme();
   const [isNativeApp, setIsNativeApp] = React.useState(false);
@@ -226,9 +227,10 @@ const SettingsView = ({
       <AnimatedCard delay={350}>
         <div style={{ marginBottom: '16px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 4px 0' }}>Data Management</h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>Backup and restore your data</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 12px 0' }}>Backup and restore your learning data</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
           <button 
             onClick={() => {
               if (window.DataManager) {
@@ -247,7 +249,7 @@ const SettingsView = ({
             }}
             style={{ flex: 1, minWidth: '120px', padding: '12px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            📤 Export Data
+            📤 Export All
           </button>
           <label style={{ flex: 1, minWidth: '120px', padding: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
             📥 Import Data
@@ -267,6 +269,64 @@ const SettingsView = ({
               }
             }} />
           </label>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button 
+            onClick={() => {
+              if (window.Database) {
+                const courses = window.Database.getAllCourses() || [];
+                const csv = 'Name,Progress,Chapters,Rating,Students\n' + 
+                  courses.map(c => `"${c.name}",${c.progress},${c.chapters},${c.rating},${c.students}`).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `learnora-courses-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                showToast('Courses exported as CSV!', 'success');
+              }
+            }}
+            style={{ flex: 1, minWidth: '100px', padding: '10px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+          >
+            📊 CSV
+          </button>
+          <button 
+            onClick={() => {
+              if (window.Database) {
+                const assignments = window.Database.getAllAssignments() || [];
+                const csv = 'Title,Subject,Due Date,Status,Points\n' + 
+                  assignments.map(a => `"${a.title}","${a.subject || ''}","${a.dueDate || ''}","${a.status || 'pending'}","${a.points || 100}"`).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `learnora-assignments-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                showToast('Assignments exported!', 'success');
+              }
+            }}
+            style={{ flex: 1, minWidth: '100px', padding: '10px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+          >
+            📝 Assignments
+          </button>
+          <button 
+            onClick={() => {
+              if (window.ProgressReportGenerator) {
+                showToast('Use the Progress Report section below for full reports', 'info');
+              } else {
+                showToast('Progress report PDF generation coming soon!', 'info');
+              }
+            }}
+            style={{ flex: 1, minWidth: '100px', padding: '10px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+          >
+            📄 Report
+          </button>
+        </div>
+      </AnimatedCard>
+
+      {/* Progress Report Generator */}
+      <ProgressReportGenerator />
         </div>
       </AnimatedCard>
 
