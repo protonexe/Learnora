@@ -3,6 +3,28 @@ const AnalyticsView = () => {
   const analytics = window.SampleData && window.SampleData.analytics ? window.SampleData.analytics : {};
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const [dbStats, setDbStats] = React.useState({
+    coursesCreated: 0,
+    quizzesTaken: 0,
+    flashcardsReviewed: 0,
+    assignmentsCompleted: 0
+  });
+
+  React.useEffect(() => {
+    loadDbStats();
+  }, []);
+
+  const loadDbStats = () => {
+    if (window.Database) {
+      const db = window.Database;
+      setDbStats({
+        coursesCreated: (db.getAllCourses() || []).length,
+        quizzesTaken: (db.getAllQuizzes() || []).length,
+        flashcardsReviewed: (db.getAllFlashcardDecks() || []).length,
+        assignmentsCompleted: (db.getAllAssignments() || []).length
+      });
+    }
+  };
 
   const timeRanges = [
     { value: 'day', label: 'Today' },
@@ -131,9 +153,16 @@ const AnalyticsView = () => {
           </div>
           <div style={{ width: '1px', height: '16px', background: isDark ? 'rgba(99, 102, 241, 0.3)' : 'var(--primary-200)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ fontSize: '14px' }}>🎴</span>
+            <span style={{ fontSize: '14px' }}>📚</span>
             <span style={{ fontSize: '12px', fontWeight: '600', color: isDark ? 'var(--text-primary)' : 'var(--primary-800)' }}>
-              {analytics.overview && analytics.overview.flashcardsReviewed} cards
+              {dbStats.coursesCreated} courses
+            </span>
+          </div>
+          <div style={{ width: '1px', height: '16px', background: isDark ? 'rgba(99, 102, 241, 0.3)' : 'var(--primary-200)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '14px' }}>📝</span>
+            <span style={{ fontSize: '12px', fontWeight: '600', color: isDark ? 'var(--text-primary)' : 'var(--primary-800)' }}>
+              {dbStats.quizzesTaken} quizzes
             </span>
           </div>
         </div>
