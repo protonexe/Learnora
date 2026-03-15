@@ -24,6 +24,7 @@ function LearnoraApp() {
   const [selectedBook, setSelectedBook] = React.useState(null);
   const [aiChatOpen, setAiChatOpen] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
   
   // Mobile detection
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
@@ -36,8 +37,30 @@ function LearnoraApp() {
       setIsMobile(window.innerWidth <= 768);
     };
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    
+    const handleKeyDown = (e) => {
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        setShortcutsOpen(true);
+      }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        setShortcutsOpen(false);
+      }
+      if (!e.metaKey && !e.ctrlKey) {
+        const navMap = { '1': 'dashboard', '2': 'courses', '3': 'quizzes', '4': 'flashcards', '5': 'analytics', '6': 'calendar', '7': 'notes', '8': 'settings' };
+        if (navMap[e.key] && !e.target.matches('input, textarea')) {
+          handleNavigate(navMap[e.key]);
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleNavigate]);
 
   // ==================== DATA ====================
   const courses = SampleData.courses;
@@ -601,6 +624,12 @@ function LearnoraApp() {
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         onNavigate={handleNavigate}
+      />
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcuts
+        isOpen={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
       />
 
       {/* Floating AI Button */}
