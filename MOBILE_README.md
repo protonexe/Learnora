@@ -1,11 +1,11 @@
 # Learnora Mobile App
 
-A mobile education platform with NFC login and device lockdown features for students.
+A mobile education platform with NFC login and screen pinning features for students.
 
 ## Features
 
 - **NFC Authentication**: Students can log in by tapping their NFC badge/card
-- **Device Lockdown (Kiosk Mode)**: Locks the device to the Learnora app when students log in
+- **Screen Pinning**: Pins the app to the foreground when students log in
 - **Multi-role Support**: Students, Teachers, and Parents
 - **Offline Support**: Works without internet connection
 - **PWA Capable**: Can be installed as a Progressive Web App
@@ -91,67 +91,22 @@ emma.wilson|student|optional-token|Emma Wilson
 
 You can use any NFC writer app to program cards. For testing, the app includes a demo mode that simulates NFC scans.
 
-## Device Lockdown (Kiosk Mode)
+## Screen Pinning
 
 ### Android
 
-#### Option 1: Device Owner Mode (Recommended for schools)
+When students log in, the app requests Android's built-in screen pinning feature. This keeps the app in the foreground and prevents accidental navigation away.
 
-1. Enable USB debugging on the device
-2. Connect the device to a computer
-3. Run the following ADB command:
-```bash
-adb shell dpm set-device-owner com.learnora.app/.plugins.KioskDeviceAdminReceiver
-```
+**How to unpin:**
+1. Press the Recent Apps button
+2. Long-press the Learnora app icon
+3. Select "Unpin"
 
-4. Once set as device owner, the app can:
-   - Lock the device to itself (kiosk mode)
-   - Disable the status bar and notifications
-   - Prevent app switching
-   - Disable the home button
-
-#### Option 2: Lock Task Mode (Without Device Owner)
-
-The app can still enter lock task mode, but users can exit by pressing Home and Recent buttons simultaneously.
+The screen will stay awake while pinned.
 
 ### iOS
 
-iOS uses **Single App Mode (SAM)** which requires MDM configuration:
-
-1. Set up an MDM solution (e.g., Apple Business Manager, Jamf, Mosyle)
-2. Create a configuration profile with Single App Mode enabled
-3. Deploy the profile to devices
-4. The app will automatically enter kiosk mode when launched
-
-#### MDM Configuration Example
-
-```xml
-<key>com.apple.app.lock</key>
-<dict>
-    <key>apps</key>
-    <array>
-        <dict>
-            <key>bundleIdentifier</key>
-            <string>com.learnora.app</string>
-            <key>options</key>
-            <dict>
-                <key>disableTouch</key>
-                <false/>
-                <key>disableDeviceRotation</key>
-                <true/>
-                <key>disableVolumeButtons</key>
-                <true/>
-                <key>disableRingerSwitch</key>
-                <true/>
-                <key>disableSleepWakeButton</key>
-                <true/>
-                <key>disableAutoLock</key>
-                <true/>
-            </dict>
-        </dict>
-    </array>
-</dict>
-```
+On iOS, the app keeps the screen awake. For full kiosk functionality, MDM (Mobile Device Management) with Single App Mode is required.
 
 ## Project Structure
 
@@ -161,16 +116,14 @@ learnora/
 │   └── app/src/main/
 │       ├── java/com/learnora/app/
 │       │   └── plugins/
-│       │       ├── KioskModePlugin.java
-│       │       ├── KioskDeviceAdminReceiver.java
+│       │       ├── ScreenPinPlugin.java
 │       │       └── LearnoraNFCPlugin.java
 │       └── res/xml/
-│           ├── device_admin.xml
 │           ├── nfc_tech_list.xml
 │           └── network_security_config.xml
 ├── ios/                        # iOS native project
 │   └── Plugin/
-│       ├── KioskModePlugin.swift
+│       ├── ScreenPinPlugin.swift
 │       └── LearnoraNFCPlugin.swift
 ├── js/                         # JavaScript/React code
 │   ├── utils/
@@ -179,7 +132,7 @@ learnora/
 │   └── components/
 │       └── views/
 │           ├── Login.js        # NFC-enabled login
-│           └── Settings.js     # Kiosk mode controls
+│           └── Settings.js     # Screen pin controls
 ├── capacitor.config.ts         # Capacitor configuration
 └── package.json
 ```
@@ -217,10 +170,9 @@ npm run cap:open:ios
 - Include timestamps in card data to prevent replay attacks
 - Consider using signed tokens for authentication
 
-### Device Lockdown
-- Device Owner mode is difficult to remove without factory reset
-- Test thoroughly before deploying to production devices
-- Have a backup admin method to exit kiosk mode
+### Screen Pinning
+- Screen pinning is a user-initiated feature - users can always unpin
+- For stricter lockdown, consider MDM solutions
 
 ### Data Protection
 - All authentication data should be validated server-side
@@ -234,10 +186,9 @@ npm run cap:open:ios
 - Check that the app has NFC permission
 - Verify the device supports NFC
 
-### Kiosk Mode Not Activating
-- Ensure the app is set as Device Owner (Android)
-- Check MDM configuration (iOS)
+### Screen Pinning Not Activating
 - Verify the app is running with student role
+- Check that Android screen pinning is enabled in settings
 
 ### Build Errors
 - Run `npm run cap:sync` before building

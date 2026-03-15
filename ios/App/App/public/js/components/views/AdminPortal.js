@@ -17,14 +17,24 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
 
   React.useEffect(() => {
     fetchData();
-    checkDeviceStatus();
+    // Force check on mount
+    setTimeout(() => checkDeviceStatus(), 500);
   }, []);
 
   const checkDeviceStatus = async () => {
-    const native = window.NativePlugins && window.NativePlugins.isNative && window.NativePlugins.isNative();
-    setIsNativeApp(!!native);
+    // Check if running in native app - try multiple detection methods
+    const isCapacitorNative = !!(window.Capacitor && (window.Capacitor.isNative || window.Capacitor.platform === 'android'));
+    const hasKioskPlugin = !!(window.NativePlugins && window.NativePlugins.KioskMode);
+    const isNative = isCapacitorNative || hasKioskPlugin;
     
-    if (native && window.NativePlugins && window.NativePlugins.KioskMode) {
+    // Show detection result on screen
+    if (!isNative) {
+      showToast('Running in: ' + (window.Capacitor?.platform || 'web') + ' - Native plugins: ' + (hasKioskPlugin ? 'yes' : 'no'), 'warning');
+    }
+    
+    setIsNativeApp(isNative);
+    
+    if (isNative && window.NativePlugins && window.NativePlugins.KioskMode) {
       try {
         const kioskResult = await window.NativePlugins.KioskMode.isActive();
         setKioskActive(kioskResult.active);
@@ -32,10 +42,12 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
         const ownerResult = await window.NativePlugins.KioskMode.isDeviceOwner();
         setIsDeviceOwner(ownerResult.isDeviceOwner);
       } catch (err) {
-        console.error('Error checking device status:', err);
+        showToast('Error checking: ' + err.message, 'error');
+        setIsNativeApp(false);
+        setIsDeviceOwner(false);
+        setKioskActive(false);
       }
     } else {
-      // Web browser - no native plugins
       setIsNativeApp(false);
       setIsDeviceOwner(false);
       setKioskActive(false);
@@ -71,8 +83,13 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
     }
 
     // Check if native plugins are available
-    if (!window.NativePlugins || !window.NativePlugins.KioskMode || !window.NativePlugins.KioskMode.clearDeviceOwner) {
-      setDeviceOwnerError('Device Owner management is only available in the native Android app, not in web browser');
+    const hasKioskPlugin = !!(window.NativePlugins && window.NativePlugins.KioskMode);
+    const platform = window.Capacitor?.platform || 'unknown';
+    
+    if (!hasKioskPlugin) {
+      const msg = 'No native plugin. Platform: ' + platform + ', NativePlugins: ' + (!!window.NativePlugins) + ', KioskMode: ' + (window.NativePlugins?.KioskMode || 'undefined');
+      setDeviceOwnerError(msg);
+      showToast(msg, 'error');
       return;
     }
 
@@ -80,20 +97,23 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
     setDeviceOwnerError('');
 
     try {
-      const result = await window.NativePlugins.KioskMode.clearDeviceOwner({
-        password: deviceOwnerPassword
-      });
+      const result = await window.NativePlugins.KioskMode.clearDeviceOwner(deviceOwnerPassword);
 
-      if (result.success) {
-        showToast('Device Owner status cleared successfully', 'success');
+      if (result && result.success) {
+        showToast(result.message || 'Device Owner removed!', 'success');
         setIsDeviceOwner(false);
+        setKioskActive(false);
         setShowDeviceOwnerDialog(false);
         setDeviceOwnerPassword('');
       } else {
-        setDeviceOwnerError(result.message || 'Failed to clear Device Owner');
+        const errorMsg = result?.message || 'Unknown error';
+        setDeviceOwnerError(errorMsg);
+        showToast(errorMsg, 'error');
       }
     } catch (err) {
-      setDeviceOwnerError(err.message || 'Error clearing Device Owner');
+      const errorMsg = 'Exception: ' + (err.message || 'Unknown');
+      setDeviceOwnerError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setIsDisablingDeviceOwner(false);
     }
@@ -308,6 +328,11 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
           <div style={{ background: 'var(--glass-bg)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
             <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '700' }}>🔐 Device Owner Management</h3>
             
+            {/* DEBUG */}
+            <div style={{ padding: '10px', background: '#222', borderRadius: '6px', marginBottom: '16px', fontSize: '10px', color: isNativeApp ? '#0f0' : '#f00', fontFamily: 'monospace' }}>
+              DEBUG: NativeApp={isNativeApp.toString()} | Platform={window.Capacitor?.platform || 'N/A'} | Plugins={!!window.NativePlugins} | Kiosk={!!window.NativePlugins?.KioskMode}
+            </div>
+            
             {!isNativeApp ? (
               <div style={{ padding: '16px', background: 'rgba(107, 114, 128, 0.1)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
@@ -318,88 +343,45 @@ const AdminPortal = ({ userId, onLogout, showToast }) => {
               <>
                 <div style={{ 
                   padding: '16px', 
-                  background: isDeviceOwner ? 'rgba(99, 102, 241, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                  background: 'rgba(99, 102, 241, 0.1)',
                   borderRadius: '8px',
                   marginBottom: '16px',
-                  border: `1px solid ${isDeviceOwner ? 'var(--primary-500)' : 'var(--border-color)'}`
+                  border: '1px solid var(--primary-500)'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px', color: 'var(--text-primary)' }}>
-                        Device Owner Status
+                        Screen Pinning
                       </p>
                       <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                        {isDeviceOwner 
-                          ? 'Device is currently set as Device Owner. App has full device control.' 
-                          : 'Device Owner mode is not active. Device has normal permissions.'}
+                        When students log in, the app uses Android's screen pinning feature to keep the app in the foreground.
                       </p>
                     </div>
-                    <div style={{ 
-                      padding: '8px 16px', 
-                      borderRadius: '6px',
-                      background: isDeviceOwner ? 'var(--danger)' : 'var(--bg-tertiary)',
-                      color: isDeviceOwner ? '#fff' : 'var(--text-secondary)',
-                      fontSize: '12px',
-                      fontWeight: '600'
-                    }}>
-                      {isDeviceOwner ? '🔒 ACTIVE' : '🔓 INACTIVE'}
-                    </div>
                   </div>
-
-                  {isNativeApp && isDeviceOwner && (
-                    <button
-                      onClick={() => {
-                        setShowDeviceOwnerDialog(true);
-                        setDeviceOwnerPassword('');
-                        setDeviceOwnerError('');
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '10px 16px',
-                        background: 'var(--danger)',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        transition: 'all 0.2s ease',
-                        marginTop: '12px'
-                      }}
-                    >
-                      Disable Device Owner
-                    </button>
-                  )}
                 </div>
 
                 <div style={{
                   padding: '16px',
                   background: 'var(--bg-primary)',
                   borderRadius: '8px',
-                  border: '1px solid var(--border-color)'
+                  border: '1px solid var(--border-color)',
+                  marginBottom: '16px'
                 }}>
                   <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                    <strong>About Device Owner:</strong>
+                    <strong>How Screen Pinning Works:</strong>
                   </p>
-                  <ul style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '16px', margin: 0 }}>
-                    <li>When enabled, the app has privileged access to device settings</li>
-                    <li>Allows enforcement of kiosk mode and screen pinning</li>
-                    <li>Disabling restores normal device permissions</li>
-                    <li>Requires admin password for security</li>
-                  </ul>
+                  <ol style={{ fontSize: '11px', color: 'var(--text-secondary)', paddingLeft: '16px', margin: 0, lineHeight: '1.6' }}>
+                    <li style={{marginBottom: '8px'}}>Students tap Recent Apps to see pinned apps</li>
+                    <li style={{marginBottom: '8px'}}>Long-press Learnora app icon and select "Unpin" to exit</li>
+                    <li>Screen stays awake while pinned</li>
+                  </ol>
                 </div>
 
                 <div style={{ marginTop: '16px' }}>
                   <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>System Status</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '12px' }}>
                     <div style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                      <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Device Owner</p>
-                      <p style={{ fontSize: '16px', fontWeight: '600', color: isDeviceOwner ? 'var(--success)' : 'var(--text-secondary)' }}>
-                        {isDeviceOwner ? '✓ Enabled' : '✗ Disabled'}
-                      </p>
-                    </div>
-                    <div style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                      <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Kiosk Mode</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Screen Pin</p>
                       <p style={{ fontSize: '16px', fontWeight: '600', color: kioskActive ? 'var(--success)' : 'var(--text-secondary)' }}>
                         {kioskActive ? '✓ Active' : '✗ Inactive'}
                       </p>

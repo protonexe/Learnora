@@ -144,24 +144,16 @@ const LoginView = ({ onAuthenticate, showToast }) => {
     return result;
   };
 
-  const enableKioskMode = async (role) => {
+  const enableScreenPin = async (role) => {
     if (!isNativeApp || !window.NativePlugins) return;
     
     if (role === 'student') {
-      const result = await window.NativePlugins.KioskMode.enable();
+      const result = await window.NativePlugins.ScreenPin.enable();
       if (result.success) {
         setKioskEnabled(true);
-        if (result.pinned) {
-          showToast('Screen Pinned. Run ADB Device Owner script for True Kiosk Mode.', 'warning');
-        } else {
-          showToast('Device locked to Learnora (True Kiosk)', 'success');
-        }
+        showToast('Screen Pinned - tap recent apps + Learnora to unpin', 'success');
       } else {
-        if (result.message && result.message.includes('device owner')) {
-          showToast('Kiosk mode requires device owner setup. See admin guide.', 'warning');
-        } else {
-          showToast('Failed to enable Kiosk Mode: ' + result.message, 'error');
-        }
+        showToast('Failed to enable Screen Pin: ' + result.message, 'error');
       }
     }
   };
@@ -196,7 +188,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
       if (isValid) {
         console.log('[LOGIN] Credentials valid! Enabling kiosk mode for role:', selectedRole);
         setLoginError('');
-        await enableKioskMode(selectedRole);
+        await enableScreenPin(selectedRole);
         console.log('[LOGIN] Kiosk mode complete, calling onAuthenticate with role:', selectedRole);
         onAuthenticate(selectedRole);
         console.log('[LOGIN] onAuthenticate called successfully');
@@ -257,7 +249,7 @@ const LoginView = ({ onAuthenticate, showToast }) => {
 
     setTimeout(async () => {
       const role = authData.role || selectedRole;
-      await enableKioskMode(role);
+      await enableScreenPin(role);
       onAuthenticate(role);
       showToast(`Welcome${authData.name ? ' ' + authData.name : ''}!`, 'success');
     }, 1000);
@@ -296,37 +288,37 @@ const LoginView = ({ onAuthenticate, showToast }) => {
       <div style={{ 
         maxWidth: '400px', 
         width: '100%',
-        padding: '32px'
+        padding: '24px'
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{ 
-            width: '64px', 
-            height: '64px', 
-            margin: '0 auto 20px',
+            width: '48px', 
+            height: '48px', 
+            margin: '0 auto 12px',
             background: 'var(--gradient-primary)',
-            borderRadius: '16px',
+            borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)'
+            boxShadow: '0 4px 16px rgba(99, 102, 241, 0.3)'
           }}>
-            <span style={{ fontSize: '32px' }}>📚</span>
+            <span style={{ fontSize: '24px' }}>📚</span>
           </div>
           
           <h1 style={{ 
-            fontSize: '28px', 
+            fontSize: '24px', 
             fontWeight: 800, 
-            marginBottom: '8px',
+            marginBottom: '4px',
             letterSpacing: '-0.02em',
             color: 'var(--text-primary)'
           }}>
             Learnora
           </h1>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
             Smart Education Platform
           </p>
           {isNativeApp && (
-            <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
               Native App • NFC Enabled
             </p>
           )}

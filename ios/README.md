@@ -6,7 +6,7 @@ After running `npx cap add ios`, the iOS project will be created in the `ios/` f
 
 ## Adding Custom Plugins
 
-The custom NFC and Kiosk plugins need to be manually added to the Xcode project:
+The custom NFC and Screen Pin plugins need to be manually added to the Xcode project:
 
 ### 1. Open the Xcode Project
 
@@ -21,7 +21,7 @@ In Xcode:
 2. Select "Add Files to 'App'"
 3. Add the following files from `ios/Plugin/`:
    - `LearnoraNFCPlugin.swift`
-   - `KioskModePlugin.swift`
+   - `ScreenPinPlugin.swift`
 
 ### 3. Register Plugins
 
@@ -34,7 +34,7 @@ In `ios/App/App/capacitor.config.json`, ensure plugins are registered:
   "webDir": "www",
   "plugins": {
     "LearnoraNFC": {},
-    "KioskMode": {}
+    "ScreenPin": {}
   }
 }
 ```
@@ -54,7 +54,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Register custom plugins
         capacitorApplication.registerPlugin(LearnoraNFCPlugin.self)
-        capacitorApplication.registerPlugin(KioskModePlugin.self)
+        capacitorApplication.registerPlugin(ScreenPinPlugin.self)
         
         return true
     }
@@ -73,9 +73,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
    - `NFCReaderUsageDescription`
    - `com.apple.developer.nfc.readersession.formats`
 
-## Single App Mode (Kiosk)
+## Screen Pinning
 
-For iOS kiosk mode, you must use MDM:
+On iOS, the app uses `isIdleTimerDisabled` to keep the screen awake. For full kiosk functionality (Single App Mode), MDM configuration is required.
 
 ### Using Apple Business Manager / MDM
 

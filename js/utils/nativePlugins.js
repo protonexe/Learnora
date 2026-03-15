@@ -1,9 +1,8 @@
 const NativePlugins = {
     isNative: () => {
-        return typeof window !== 'undefined' && 
-               window.Capacitor && 
-               window.Capacitor.isNativePlatform && 
-               window.Capacitor.isNativePlatform();
+        if (typeof window === 'undefined' || !window.Capacitor) return false;
+        const platform = window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : null;
+        return platform === 'android' || platform === 'ios';
     },
     
     getPlatform: () => {
@@ -11,33 +10,33 @@ const NativePlugins = {
         return window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : 'web';
     },
     
-    KioskMode: {
+    ScreenPin: {
         enable: async () => {
             if (!NativePlugins.isNative()) {
-                console.log('[KioskMode] Not native - simulating kiosk mode');
-                return { success: true, message: 'Simulated kiosk mode (web)' };
+                console.log('[ScreenPin] Not native - simulating screen pin');
+                return { success: true, message: 'Simulated screen pin (web)' };
             }
             
             try {
-                const { KioskMode } = window.Capacitor.Plugins;
-                return await KioskMode.enableKioskMode();
+                const { ScreenPin } = window.Capacitor.Plugins;
+                return await ScreenPin.enablePin();
             } catch (e) {
-                console.error('[KioskMode] Error:', e);
+                console.error('[ScreenPin] Error:', e);
                 return { success: false, message: e.message };
             }
         },
         
         disable: async () => {
             if (!NativePlugins.isNative()) {
-                console.log('[KioskMode] Not native - disabling simulated kiosk');
-                return { success: true, message: 'Simulated kiosk disabled (web)' };
+                console.log('[ScreenPin] Not native - disabling simulated pin');
+                return { success: true, message: 'Simulated pin disabled (web)' };
             }
             
             try {
-                const { KioskMode } = window.Capacitor.Plugins;
-                return await KioskMode.disableKioskMode();
+                const { ScreenPin } = window.Capacitor.Plugins;
+                return await ScreenPin.disablePin();
             } catch (e) {
-                console.error('[KioskMode] Error:', e);
+                console.error('[ScreenPin] Error:', e);
                 return { success: false, message: e.message };
             }
         },
@@ -48,24 +47,83 @@ const NativePlugins = {
             }
             
             try {
-                const { KioskMode } = window.Capacitor.Plugins;
-                return await KioskMode.isKioskModeActive();
+                const { ScreenPin } = window.Capacitor.Plugins;
+                return await ScreenPin.isPinActive();
             } catch (e) {
                 return { active: false };
             }
+        }
+    },
+    
+    KioskMode: {
+        enable: async () => {
+            return await NativePlugins.ScreenPin.enable();
+        },
+        
+        disable: async (password) => {
+            return await NativePlugins.ScreenPin.disable();
+        },
+        
+        isActive: async () => {
+            return await NativePlugins.ScreenPin.isActive();
         },
         
         isDeviceOwner: async () => {
-            if (!NativePlugins.isNative()) {
-                return { isDeviceOwner: false };
-            }
-            
-            try {
-                const { KioskMode } = window.Capacitor.Plugins;
-                return await KioskMode.isDeviceOwner();
-            } catch (e) {
-                return { isDeviceOwner: false };
-            }
+            return { isDeviceOwner: false };
+        },
+        
+        verifyPassword: async (password) => {
+            return { valid: true };
+        },
+        
+        setExitPassword: async () => {
+            return { success: true, message: 'Password update not needed (using screen pin)' };
+        },
+        
+        clearDeviceOwner: async () => {
+            return { success: true, message: 'Not device owner (using screen pin)' };
+        },
+        
+        getDeviceOwnerInfo: async () => {
+            return { 
+                isDeviceOwner: false, 
+                isAdminActive: false, 
+                isRemovable: false,
+                supportedMethods: [],
+                message: 'Using screen pinning instead of device owner'
+            };
+        },
+        
+        isRemovableDeviceOwner: async () => {
+            return { isRemovable: false };
+        },
+        
+        getSetDeviceOwnerAdbCommand: async () => {
+            return { command: '', message: 'Not needed - using screen pinning' };
+        },
+        
+        getRemoveDeviceOwnerAdbCommand: async () => {
+            return { command: '', message: 'Not needed - using screen pinning' };
+        },
+        
+        generateProvisioningQrData: async () => {
+            return { qrData: '{}', instructions: 'Not needed - using screen pinning' };
+        },
+        
+        openDeviceAdminSettings: async () => {
+            return { success: false, message: 'Not needed - using screen pinning' };
+        },
+        
+        requestDeviceOwnerActivation: async () => {
+            return { success: false, message: 'Using screen pinning instead of device owner', requiresSetup: false };
+        },
+        
+        generateProvisioningQrCode: async () => {
+            return { qrCodeImage: '', instructions: 'Not needed - using screen pinning' };
+        },
+        
+        factoryReset: async () => {
+            return { success: false, message: 'Factory reset not available with screen pinning' };
         }
     },
     
@@ -182,7 +240,6 @@ const NativePlugins = {
                             timestamp: json.timestamp || nfcData.timestamp
                         };
                     } catch (e) {
-                        // Not valid JSON
                     }
                 }
                 
@@ -211,7 +268,6 @@ const NativePlugins = {
                         };
                     }
                 } catch (e) {
-                    // Invalid URL
                 }
             }
         }

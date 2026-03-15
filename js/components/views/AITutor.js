@@ -16,18 +16,69 @@ const AITutorView = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(!isMobile);
   
   const [aiProvider, setAiProvider] = React.useState(() => {
-    return localStorage.getItem('learnora-ai-provider') || 'gemini';
+    return localStorage.getItem('learnora-ai-provider') || 'gamma';
   });
+  
+  const aiProviderLabels = {
+    'alpha': 'Alpha',
+    'beta': 'Beta', 
+    'gamma': 'Gamma'
+  };
   const [editingId, setEditingId] = React.useState(null);
   const [editName, setEditName] = React.useState('');
   
   const messagesEndRef = React.useRef(null);
   const chatContainerRef = React.useRef(null);
   
-  const GEMINI_API_KEY = "AIzaSyAQTR2WieTaYAB-fm93IoKaC0qh3ByX1Ec";
-  const OPENROUTER_API_KEY = "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";
-  const GEMINI_MODEL = "gemini-2.5-flash";
-  const DEEPSEEK_MODEL = "deepseek/deepseek-r1-0528:free";
+  // Use config.js for API keys
+  const GEMINI_API_KEY = window.APP_CONFIG?.gemini?.key || 'AIzaSyCBvj6U-sZ0CdV2YngvgajKom5fq3UqXq4';
+  const OPENROUTER_API_KEY = window.APP_CONFIG?.openrouter?.key || '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';
+  const GEMINI_MODEL = window.APP_CONFIG?.gemini?.models?.[0]?.id || 'gemini-2.5-flash';
+  const OPENROUTER_MODEL = 'openrouter/free';
+  const NGROK_BASE_URL = "https://retractable-unheedingly-arnetta.ngrok-free.dev";
+  
+  const [selectedModel, setSelectedModel] = React.useState(() => {
+    return localStorage.getItem('learnora-ai-model') || 'google/gemma-3-4b';
+  });
+  
+  // Local AI responses - works offline without API
+  const localAIResponses = [
+    "I'd be happy to help with that! Could you provide more details?",
+    "That's an interesting question. Let me think about it...",
+    "Great point! Here's what I know about that topic:",
+    "I can help you with that. Here's my understanding:",
+    "Thanks for asking! Based on my knowledge:",
+    "That's a thoughtful question. Here's my response:",
+    "I'd recommend considering these factors:",
+    "Let me break this down for you:",
+    "Based on general knowledge, I can say that:",
+    "Here's some information that might help:"
+  ];
+
+  const localAIContext = {
+    math: "I can help with math! For example: 2+2=4, 10*5=50, or solving equations like x+5=10 gives x=5.",
+    science: "Science covers many topics: physics, chemistry, biology. For example, H2O is water, the speed of light is ~300,000 km/s.",
+    history: "History is full of important events. Key periods include Ancient Rome, The Renaissance, World Wars, and modern history.",
+    general: "I'm here to help you learn! Ask me about any subject - I can provide explanations, examples, and guidance."
+  };
+
+  const getLocalAIResponse = (userMessage) => {
+    const msg = userMessage.toLowerCase();
+    let context = localAIResponses[Math.floor(Math.random() * localAIResponses.length)];
+    let detail = "";
+    
+    if (msg.includes('math') || msg.includes('calculate') || msg.includes('number') || msg.includes('+') || msg.includes('-') || msg.includes('*') || msg.includes('/') || msg.includes('equation')) {
+      detail = localAIContext.math;
+    } else if (msg.includes('science') || msg.includes('physics') || msg.includes('chemistry') || msg.includes('biology') || msg.includes('water') || msg.includes('atom')) {
+      detail = localAIContext.science;
+    } else if (msg.includes('history') || msg.includes('war') || msg.includes('ancient') || msg.includes('year')) {
+      detail = localAIContext.history;
+    } else {
+      detail = "I can help with many topics including math, science, history, languages, and more!";
+    }
+    
+    return `${context}\n\n${detail}\n\nNote: This is a local/offline response. For more accurate AI responses, please switch to Gemini or OpenRouter in settings.`;
+  };
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
   const messages = activeConversation?.messages || [];
@@ -43,6 +94,10 @@ const AITutorView = () => {
   React.useEffect(() => {
     localStorage.setItem('learnora-ai-provider', aiProvider);
   }, [aiProvider]);
+
+  React.useEffect(() => {
+    localStorage.setItem('learnora-ai-model', selectedModel);
+  }, [selectedModel]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -138,7 +193,7 @@ const AITutorView = () => {
     return data.candidates[0].content.parts[0].text;
   };
 
-  const callDeepSeekAPI = async (userMessage, conversationHistory) => {
+  const callOpenRouterAPI = async (userMessage, conversationHistory) => {
     const apiMessages = [
       {
         role: "system",
@@ -164,14 +219,53 @@ const AITutorView = () => {
         "X-Title": "Learnora AI Tutor"
       },
       body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
+        model: OPENROUTER_MODEL,
         messages: apiMessages,
         temperature: 0.7,
         max_tokens: 1000
       })
     });
 
-    if (!response.ok) throw new Error(`DeepSeek API error: ${response.status}`);
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+      console.error('OpenRouter error:', responseData);
+      throw new Error(`OpenRouter API error: ${response.status} - ${responseData.error?.message || responseData.message || 'Unknown error'}`);
+    }
+    
+    return responseData.choices[0].message.content;
+  };
+
+  const callNgrokAPI = async (userMessage, conversationHistory) => {
+    const apiMessages = [
+      {
+        role: "system",
+        content: "You are an expert educational AI tutor. Provide clear, helpful responses."
+      }
+    ];
+    
+    const recentHistory = conversationHistory.slice(-10);
+    recentHistory.forEach(msg => {
+      apiMessages.push({
+        role: msg.role,
+        content: msg.content
+      });
+    });
+
+    const response = await fetch(`${NGROK_BASE_URL}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: apiMessages,
+        temperature: 0.7,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) throw new Error(`Ngrok API error: ${response.status}`);
     
     const data = await response.json();
     return data.choices[0].message.content;
@@ -216,10 +310,13 @@ const AITutorView = () => {
     
     try {
       let aiResponse;
-      if (aiProvider === 'gemini') {
+      if (aiProvider === 'alpha') {
         aiResponse = await callGeminiAPI(message, currentMessages);
+      } else if (aiProvider === 'gamma') {
+        aiResponse = await callNgrokAPI(message, currentMessages);
       } else {
-        aiResponse = await callDeepSeekAPI(message, currentMessages);
+        // Fallback to gamma
+        aiResponse = await callNgrokAPI(message, currentMessages);
       }
       
       setConversations(prev => prev.map(c => 
@@ -543,34 +640,34 @@ const AITutorView = () => {
             borderRadius: 'var(--radius-md)'
           }}>
             <button
-              onClick={() => setAiProvider('gemini')}
+              onClick={() => setAiProvider('alpha')}
               style={{
                 padding: isMobile ? '4px 8px' : '6px 12px',
-                background: aiProvider === 'gemini' ? 'var(--bg-primary)' : 'transparent',
+                background: aiProvider === 'alpha' ? 'var(--bg-primary)' : 'transparent',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
                 fontSize: isMobile ? '11px' : '13px',
                 fontWeight: 500,
-                color: aiProvider === 'gemini' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                color: aiProvider === 'alpha' ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 cursor: 'pointer'
               }}
             >
-              Gemini
+              Alpha
             </button>
             <button
-              onClick={() => setAiProvider('deepseek')}
+              onClick={() => setAiProvider('gamma')}
               style={{
                 padding: isMobile ? '4px 8px' : '6px 12px',
-                background: aiProvider === 'deepseek' ? 'var(--bg-primary)' : 'transparent',
+                background: aiProvider === 'gamma' ? 'var(--bg-primary)' : 'transparent',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
                 fontSize: isMobile ? '11px' : '13px',
                 fontWeight: 500,
-                color: aiProvider === 'deepseek' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                color: aiProvider === 'gamma' ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 cursor: 'pointer'
               }}
             >
-              DeepSeek
+              Gamma
             </button>
           </div>
         </div>

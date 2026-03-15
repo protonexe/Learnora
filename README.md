@@ -106,26 +106,13 @@ learnora/
 
 ## Deployment
 
-### Android Kiosk Mode (Hardware Setup)
+### Android Screen Pinning
 
-To enable "True Kiosk Mode" (preventing students from exiting the app or accessing the Android OS), the app must be registered as the Android **Device Owner**. 
+When a student logs in, the app will request **screen pinning** - Android's built-in feature that keeps the app in the foreground. This doesn't require device owner privileges.
 
-1. Install the APK to the device.
-2. **Remove ALL accounts** from the Android device temporarily (Settings > Accounts). Android will not allow setting a Device Owner if any Google accounts are signed in.
-3. Connect the device via USB and ensure USB Debugging is enabled.
-4. Run the provided script from your terminal:
-
-```bash
-# On Windows
-setup-kiosk-android.bat
-
-# On Mac/Linux
-bash setup-kiosk-android.sh
-```
-
-*(Alternatively, run manually: `adb shell dpm set-device-owner com.learnora.app/.plugins.KioskDeviceAdminReceiver`)*
-
-Once set, the device will automatically hard-lock when a student logs in. To exit, students must click "Logout" in Settings and a teacher must enter the admin password (default: `admin1234`).
+- Students can still access the recent apps screen by swiping up
+- To unpin: tap the recent apps button, then long-press the Learnora app icon and select "Unpin"
+- The screen will stay awake while pinned
 
 ### Web Deployment (GitHub Pages)
 No build step required. Just push to your repository and enable GitHub Pages in the repository settings.

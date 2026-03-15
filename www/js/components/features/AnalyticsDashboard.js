@@ -6,9 +6,9 @@ const AnalyticsDashboard = () => {
   const [hoveredBar, setHoveredBar] = React.useState(null);
   const [hoveredSlice, setHoveredSlice] = React.useState(null);
   
-  const analytics = window.LearnoraDB && window.LearnoraDB.data.analytics ? window.LearnoraDB.data.analytics : (window.SampleData && window.SampleData.analytics ? window.SampleData.analytics : {});
+  const analytics = window.SampleData && window.SampleData.analytics ? window.SampleData.analytics : {};
   const today = new Date().getDay();
-  const weeklyData = window.LearnoraDB && window.LearnoraDB.data.weeklyStudyData ? window.LearnoraDB.data.weeklyStudyData : (window.SampleData && window.SampleData.weeklyStudyData ? window.SampleData.weeklyStudyData : []);
+  const weeklyData = window.SampleData && window.SampleData.weeklyStudyData ? window.SampleData.weeklyStudyData : [];
   const maxHours = weeklyData.length > 0 ? Math.max(...weeklyData.map(d => d.hours)) : 1;
 
   // Calculate total hours for donut chart

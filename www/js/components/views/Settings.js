@@ -7,11 +7,16 @@ const SettingsView = ({
   const { theme, toggleTheme } = useTheme();
   const [isNativeApp, setIsNativeApp] = React.useState(false);
   const [kioskActive, setKioskActive] = React.useState(false);
+  const [isDeviceOwner, setIsDeviceOwner] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = React.useState(false);
+  const [showDeviceOwnerDialog, setShowDeviceOwnerDialog] = React.useState(false);
   const [exitPassword, setExitPassword] = React.useState('');
+  const [deviceOwnerPassword, setDeviceOwnerPassword] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
+  const [deviceOwnerError, setDeviceOwnerError] = React.useState('');
   const [isVerifying, setIsVerifying] = React.useState(false);
+  const [isDisablingDeviceOwner, setIsDisablingDeviceOwner] = React.useState(false);
 
   React.useEffect(() => {
     const checkNative = async () => {
