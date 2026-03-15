@@ -63,6 +63,7 @@ const SampleData = {
     { icon: 'layers', label: 'Flashcards', view: 'flashcards' },
     { icon: 'bar-chart-2', label: 'Analytics', view: 'analytics' },
     { icon: 'book', label: 'E-Books', view: 'ebooks' },
+    { icon: 'folder', label: 'Resources', view: 'resources' },
     { icon: 'calendar', label: 'Calendar', view: 'calendar' },
     { icon: 'clipboard', label: 'Announcements', view: 'announcements' },
     { icon: 'users', label: 'Enrollment', view: 'enrollment' },

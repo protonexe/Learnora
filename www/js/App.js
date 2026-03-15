@@ -484,6 +484,13 @@ function LearnoraApp() {
             showToast={showToast}
           />
         )}
+
+        {currentView === 'resources' && (
+          <ResourcesView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
           </>
         )}
       </main>
