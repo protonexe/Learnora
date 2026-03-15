@@ -70,7 +70,11 @@ const SampleData = {
     { icon: 'trending-up', label: 'Progress', view: 'progress-report' },
     { icon: 'award', label: 'Achievements', view: 'achievements' },
     { icon: 'trophy', label: 'Leaderboard', view: 'leaderboard' },
-    { icon: 'message-circle', label: 'AI Tutor', view: 'ai-tutor' },
+    { icon: 'message-circle', label: 'Messages', view: 'messages' },
+    { icon: 'user', label: 'Profile', view: 'profile' },
+    { icon: 'users', label: 'Classes', view: 'class-management' },
+    { icon: 'calendar', label: 'Exams', view: 'exam-schedule' },
+    { icon: 'check-circle', label: 'Attendance', view: 'attendance' },
     { icon: 'settings', label: 'Settings', view: 'settings' },
   ],
 

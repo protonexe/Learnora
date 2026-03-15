@@ -5,11 +5,15 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenAIChat, userR
 
   const teacherItems = [
     { icon: 'book', label: 'Grade Book', view: 'gradebook' },
+    { icon: 'users', label: 'Classes', view: 'class-management' },
+    { icon: 'calendar', label: 'Exams', view: 'exam-schedule' },
+    { icon: 'check-circle', label: 'Attendance', view: 'attendance' },
     { icon: 'clipboard', label: 'Announcements', view: 'announcements' },
+    { icon: 'message-circle', label: 'Messages', view: 'messages' },
   ];
 
   const navItems = userRole === 'teacher' 
-    ? [...SampleData.navItems, ...teacherItems]
+    ? SampleData.navItems.filter(item => item.view !== 'messages' && item.view !== 'profile').concat(teacherItems)
     : SampleData.navItems;
 
   return (

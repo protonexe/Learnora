@@ -491,6 +491,42 @@ function LearnoraApp() {
             showToast={showToast}
           />
         )}
+
+        {currentView === 'profile' && (
+          <ProfileView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'messages' && (
+          <MessagesView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+            userRole={userRole}
+          />
+        )}
+
+        {currentView === 'class-management' && (
+          <ClassManagementView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'exam-schedule' && (
+          <ExamScheduleView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'attendance' && (
+          <AttendanceView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
           </>
         )}
       </main>
