@@ -527,6 +527,20 @@ function LearnoraApp() {
             showToast={showToast}
           />
         )}
+
+        {currentView === 'homework' && (
+          <HomeworkTrackerView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
+
+        {currentView === 'streak' && (
+          <StreakView 
+            onBack={() => handleNavigate('dashboard')}
+            showToast={showToast}
+          />
+        )}
           </>
         )}
       </main>

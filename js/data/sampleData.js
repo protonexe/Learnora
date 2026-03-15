@@ -68,6 +68,7 @@ const SampleData = {
     { icon: 'clipboard', label: 'Announcements', view: 'announcements' },
     { icon: 'users', label: 'Enrollment', view: 'enrollment' },
     { icon: 'trending-up', label: 'Progress', view: 'progress-report' },
+    { icon: 'zap', label: 'Streak', view: 'streak' },
     { icon: 'award', label: 'Achievements', view: 'achievements' },
     { icon: 'trophy', label: 'Leaderboard', view: 'leaderboard' },
     { icon: 'message-circle', label: 'Messages', view: 'messages' },
@@ -75,6 +76,7 @@ const SampleData = {
     { icon: 'users', label: 'Classes', view: 'class-management' },
     { icon: 'calendar', label: 'Exams', view: 'exam-schedule' },
     { icon: 'check-circle', label: 'Attendance', view: 'attendance' },
+    { icon: 'list', label: 'Homework', view: 'homework' },
     { icon: 'settings', label: 'Settings', view: 'settings' },
   ],
 
