@@ -26,6 +26,7 @@ function LearnoraApp() {
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
   const [quickAddOpen, setQuickAddOpen] = React.useState(false);
+  const [timerOpen, setTimerOpen] = React.useState(false);
   
   // Mobile detection
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
@@ -47,6 +48,11 @@ function LearnoraApp() {
       if (e.key === 'Escape') {
         setSearchOpen(false);
         setShortcutsOpen(false);
+        setTimerOpen(false);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 't') {
+        e.preventDefault();
+        setTimerOpen(true);
       }
       if (!e.metaKey && !e.ctrlKey) {
         const navMap = { '1': 'dashboard', '2': 'courses', '3': 'quizzes', '4': 'flashcards', '5': 'analytics', '6': 'calendar', '7': 'notes', '8': 'settings' };
@@ -663,6 +669,18 @@ function LearnoraApp() {
         onNavigate={handleNavigate}
         showToast={showToast}
       />
+
+      {/* Study Timer */}
+      {timerOpen && (
+        <StudyTimer 
+          onComplete={(mode) => {
+            if (mode === 'pomodoro') {
+              registerStudyActivity();
+            }
+          }}
+          onClose={() => setTimerOpen(false)}
+        />
+      )}
 
       {/* Floating AI Button */}
       {!aiChatOpen && (

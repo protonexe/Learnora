@@ -1,98 +1,259 @@
-const StudyTimer = ({ isOpen, onClose, onComplete }) => {
-  const [mode, setMode] = React.useState('focus');
+const StudyTimer = ({ onComplete, onClose }) => {
+  const isMobile = window.innerWidth <= 768;
+  const [mode, setMode] = React.useState('pomodoro');
   const [timeLeft, setTimeLeft] = React.useState(25 * 60);
   const [isRunning, setIsRunning] = React.useState(false);
   const [sessions, setSessions] = React.useState(0);
+  const [totalMinutes, setTotalMinutes] = React.useState(0);
 
   const modes = {
-    focus: { label: 'Focus', minutes: 25, color: 'var(--primary-500)' },
-    shortBreak: { label: 'Short Break', minutes: 5, color: 'var(--success)' },
-    longBreak: { label: 'Long Break', minutes: 15, color: 'var(--accent-blue)' }
+    pomodoro: { label: 'Focus', minutes: 25, color: '#6366f1', icon: '🎯' },
+    shortBreak: { label: 'Short Break', minutes: 5, color: '#10b981', icon: '☕' },
+    longBreak: { label: 'Long Break', minutes: 15, color: '#8b5cf6', icon: '🛏️' }
   };
 
   React.useEffect(() => {
     let interval;
     if (isRunning && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimeLeft(t => t - 1);
+        setTimeLeft(prev => prev - 1);
       }, 1000);
     } else if (timeLeft === 0) {
-      setIsRunning(false);
-      if (mode === 'focus') {
-        setSessions(s => s + 1);
-        if (onComplete) onComplete();
-      }
-      const notification = new Notification('Learnora', {
-        body: `${modes[mode].label} session completed!`,
-        icon: '📚'
-      });
+      handleComplete();
     }
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft, mode, onComplete]);
+  }, [isRunning, timeLeft]);
+
+  const handleComplete = () => {
+    setIsRunning(false);
+    setTotalMinutes(prev => prev + modes[mode].minutes);
+    
+    if (mode === 'pomodoro') {
+      const newSessions = sessions + 1;
+      setSessions(newSessions);
+      
+      if (newSessions % 4 === 0) {
+        setMode('longBreak');
+        setTimeLeft(modes.longBreak.minutes * 60);
+      } else {
+        setMode('shortBreak');
+        setTimeLeft(modes.shortBreak.minutes * 60);
+      }
+    } else {
+      setMode('pomodoro');
+      setTimeLeft(modes.pomodoro.minutes * 60);
+    }
+    
+    onComplete?.(mode);
+    
+    if (window.showToast) {
+      window.showToast(
+        mode === 'pomodoro' ? 'Focus session complete! Time for a break.' : 'Break over! Ready to focus?',
+        'success'
+      );
+    }
+  };
+
+  const toggleTimer = () => setIsRunning(!isRunning);
+  
+  const resetTimer = () => {
+    setIsRunning(false);
+    setTimeLeft(modes[mode].minutes * 60);
+  };
+
+  const changeMode = (newMode) => {
+    setMode(newMode);
+    setIsRunning(false);
+    setTimeLeft(modes[newMode].minutes * 60);
+  };
 
   const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleModeChange = (newMode) => {
-    setMode(newMode);
-    setTimeLeft(modes[newMode].minutes * 60);
-    setIsRunning(false);
-  };
-
-  const resetTimer = () => {
-    setTimeLeft(modes[mode].minutes * 60);
-    setIsRunning(false);
-  };
-
-  if (!isOpen) return null;
+  const progress = ((modes[mode].minutes * 60 - timeLeft) / (modes[mode].minutes * 60)) * 100;
 
   return (
     <div style={{
       position: 'fixed',
-      inset: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       background: 'rgba(0,0,0,0.8)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000
+      zIndex: 1000,
+      backdropFilter: 'blur(8px)'
     }}>
       <div style={{
         background: 'var(--bg-secondary)',
-        borderRadius: '24px',
-        padding: '32px',
+        borderRadius: isMobile ? '20px' : '24px',
+        padding: isMobile ? '24px' : '32px',
+        width: isMobile ? '90vw' : '400px',
         maxWidth: '400px',
-        width: '90%',
-        textAlign: 'center'
+        textAlign: 'center',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '24px' }}>✕</button>
-        
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '32px' }}>
-          {Object.entries(modes).map(([key, m]) => (
-            <button key={key} onClick={() => handleModeChange(key)} style={{ padding: '8px 16px', background: mode === key ? m.color : 'var(--bg-tertiary)', color: mode === key ? '#fff' : 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
-              {m.label}
+        {/* Mode Tabs */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px', 
+          marginBottom: '24px',
+          background: 'var(--bg-tertiary)',
+          padding: '4px',
+          borderRadius: '12px'
+        }}>
+          {Object.entries(modes).map(([key, value]) => (
+            <button
+              key={key}
+              onClick={() => changeMode(key)}
+              style={{
+                flex: 1,
+                padding: '10px 8px',
+                background: mode === key ? value.color : 'transparent',
+                color: mode === key ? '#fff' : 'var(--text-secondary)',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '600',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {value.label}
             </button>
           ))}
         </div>
 
-        <div style={{ fontSize: '72px', fontWeight: '700', color: modes[mode].color, marginBottom: '24px', fontFamily: 'monospace' }}>
-          {formatTime(timeLeft)}
+        {/* Timer Display */}
+        <div style={{ marginBottom: '24px', position: 'relative' }}>
+          <svg width="200" height="200" viewBox="0 0 200 200" style={{ margin: '0 auto' }}>
+            <circle
+              cx="100"
+              cy="100"
+              r="90"
+              fill="none"
+              stroke="var(--bg-tertiary)"
+              strokeWidth="8"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="90"
+              fill="none"
+              stroke={modes[mode].color}
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 90}`}
+              strokeDashoffset={`${2 * Math.PI * 90 * (1 - progress / 100)}`}
+              transform="rotate(-90 100 100)"
+              style={{ transition: 'stroke-dashoffset 1s ease' }}
+            />
+          </svg>
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)'
+          }}>
+            <div style={{ 
+              fontSize: isMobile ? '42px' : '48px', 
+              fontWeight: '800', 
+              color: 'var(--text-primary)',
+              fontFamily: 'monospace',
+              letterSpacing: '-2px'
+            }}>
+              {formatTime(timeLeft)}
+            </div>
+            <div style={{ 
+              fontSize: '14px', 
+              color: modes[mode].color,
+              fontWeight: '600',
+              marginTop: '4px'
+            }}>
+              {modes[mode].icon} {modes[mode].label}
+            </div>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px' }}>
-          <button onClick={() => setIsRunning(!isRunning)} style={{ width: '64px', height: '64px', borderRadius: '50%', background: modes[mode].color, border: 'none', color: '#fff', cursor: 'pointer', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {isRunning ? '⏸️' : '▶️'}
+        {/* Controls */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+          <button
+            onClick={toggleTimer}
+            style={{
+              padding: '14px 36px',
+              background: modes[mode].color,
+              color: '#fff',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: `0 4px 14px ${modes[mode].color}40`
+            }}
+          >
+            <Icon name={isRunning ? 'pause' : 'play'} size={20} />
+            {isRunning ? 'Pause' : 'Start'}
           </button>
-          <button onClick={resetTimer} style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            🔄
+          <button
+            onClick={resetTimer}
+            style={{
+              padding: '14px 20px',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            <Icon name="rotate-ccw" size={18} />
           </button>
         </div>
 
-        <div style={{ background: 'var(--bg-tertiary)', borderRadius: '12px', padding: '12px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>Sessions completed today: <strong style={{ color: 'var(--primary-500)' }}>{sessions}</strong></p>
+        {/* Stats */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '24px',
+          paddingTop: '16px',
+          borderTop: '1px solid var(--border-color)'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--primary-500)' }}>{sessions}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Sessions</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--accent-green)' }}>{totalMinutes}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Minutes</div>
+          </div>
         </div>
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'var(--bg-tertiary)',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '8px',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)'
+          }}
+        >
+          <Icon name="x" size={18} />
+        </button>
       </div>
     </div>
   );

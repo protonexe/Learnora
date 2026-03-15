@@ -50,9 +50,36 @@ const ProfileView = ({ onBack, showToast }) => {
       </div>
 
       <div style={{ background: 'var(--bg-secondary)', borderRadius: '16px', padding: '32px', marginBottom: '24px', textAlign: 'center' }}>
-        <div style={{ width: '100px', height: '100px', background: 'var(--primary-500)', borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
+        <div 
+          onClick={() => isEditing && document.getElementById('avatar-editor')?.classList.toggle('hidden')}
+          style={{ 
+            width: '100px', 
+            height: '100px', 
+            background: 'var(--primary-500)', 
+            borderRadius: '50%', 
+            margin: '0 auto 16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontSize: '48px',
+            cursor: isEditing ? 'pointer' : 'default',
+            border: isEditing ? '3px dashed var(--primary-300)' : 'none',
+            transition: 'all 0.2s ease'
+          }}
+          title={isEditing ? 'Click to change avatar' : ''}
+        >
           {user?.avatar || '👨‍🎓'}
         </div>
+        
+        {isEditing && (
+          <div id="avatar-editor" style={{ marginBottom: '16px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '0 0 8px 0' }}>Click an avatar to select:</p>
+            <AvatarEditor 
+              currentAvatar={editData.avatar || '👨‍🎓'}
+              onSelect={(avatar) => setEditData({...editData, avatar})}
+            />
+          </div>
+        )}
         
         {isEditing ? (
           <div style={{ maxWidth: '300px', margin: '0 auto' }}>

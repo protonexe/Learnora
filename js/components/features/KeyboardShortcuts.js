@@ -1,6 +1,8 @@
 const KeyboardShortcuts = ({ isOpen, onClose }) => {
   const shortcuts = [
     { keys: ['Ctrl', 'K'], action: 'Open global search' },
+    { keys: ['Ctrl', 'N'], action: 'Open notifications' },
+    { keys: ['Ctrl', 'T'], action: 'Open study timer' },
     { keys: ['Ctrl', '\\'], action: 'Toggle sidebar' },
     { keys: ['Esc'], action: 'Close modal/search' },
     { keys: ['1'], action: 'Go to Dashboard' },
