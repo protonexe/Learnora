@@ -380,8 +380,7 @@ const SettingsView = ({
 
       {/* Progress Report Generator */}
       <ProgressReportGenerator />
-      </AnimatedCard>
-
+      
       {/* Password Modal for Kiosk Exit */}
       <Modal 
         isOpen={showPasswordDialog} 

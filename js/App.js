@@ -947,6 +947,8 @@ function LearnoraApp() {
         {currentView === 'focus-list' && window.FocusList && (
           <FocusList onBack={() => handleNavigate('dashboard')} />
         )}
+        </>
+        )}
 
       </main>
 
