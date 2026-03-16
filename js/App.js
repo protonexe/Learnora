@@ -1042,8 +1042,6 @@ function LearnoraApp() {
         onNavigate={handleNavigate}
         showToast={showToast}
       />
-
-      {/* Study Timer */}
       {timerOpen && (
         <StudyTimer 
           onComplete={(mode) => {
