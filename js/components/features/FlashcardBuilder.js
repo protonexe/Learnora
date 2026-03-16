@@ -1,216 +1,49 @@
-const FlashcardBuilder = ({ onSave, showToast }) => {
-  const [deckTitle, setDeckTitle] = React.useState('');
-  const [deckDescription, setDeckDescription] = React.useState('');
+const FlashcardBuilder = ({ onClose }) => {
   const [cards, setCards] = React.useState([]);
-  const [currentCard, setCurrentCard] = React.useState({ front: '', back: '' });
-  const isMobile = window.innerWidth <= 768;
+  const [showAdd, setShowAdd] = React.useState(false);
+  const [newCard, setNewCard] = React.useState({ front: '', back: '' });
 
   const addCard = () => {
-    if (!currentCard.front.trim() || !currentCard.back.trim()) {
-      showToast?.('Please fill in both front and back', 'error');
-      return;
-    }
-    setCards([...cards, { ...currentCard, id: Date.now() }]);
-    setCurrentCard({ front: '', back: '' });
+    if (!newCard.front || !newCard.back) return;
+    setCards([...cards, { id: Date.now(), ...newCard }]);
+    setNewCard({ front: '', back: '' });
+    setShowAdd(false);
   };
 
-  const removeCard = (idx) => {
-    setCards(cards.filter((_, i) => i !== idx));
-  };
-
-  const saveDeck = () => {
-    if (!deckTitle.trim()) {
-      showToast?.('Please enter a deck title', 'error');
-      return;
-    }
-    if (cards.length === 0) {
-      showToast?.('Please add at least one card', 'error');
-      return;
-    }
-    onSave?.({
-      title: deckTitle,
-      description: deckDescription,
-      cards,
-      createdAt: Date.now()
-    });
-    showToast?.('Flashcard deck created!', 'success');
-  };
+  const deleteCard = (id) => setCards(cards.filter(c => c.id !== id));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Deck Info */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        borderRadius: 'var(--radius-xl)',
-        padding: '20px',
-        border: '1px solid var(--border-color)'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 16px 0' }}>Deck Details</h3>
-        <input
-          type="text"
-          placeholder="Deck title..."
-          value={deckTitle}
-          onChange={(e) => setDeckTitle(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            marginBottom: '12px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-primary)',
-            fontSize: '14px'
-          }}
-        />
-        <input
-          type="text"
-          placeholder="Description (optional)..."
-          value={deckDescription}
-          onChange={(e) => setDeckDescription(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-primary)',
-            fontSize: '14px'
-          }}
-        />
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-primary)', zIndex: 1000, overflow: 'auto', animation: 'fadeIn 0.2s ease' }}>
+      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>← Back</button>
+          <h2 style={{ margin: 0, fontSize: 20 }}>🃏 Flashcard Builder</h2>
+        </div>
+        <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>+ Add</button>
       </div>
 
-      {/* Add Card */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        borderRadius: 'var(--radius-xl)',
-        padding: '20px',
-        border: '1px solid var(--border-color)'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 16px 0' }}>Add Flashcard</h3>
-        
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '8px', display: 'block' }}>
-            Front (Question)
-          </label>
-          <textarea
-            placeholder="Enter the question or term..."
-            value={currentCard.front}
-            onChange={(e) => setCurrentCard({ ...currentCard, front: e.target.value })}
-            rows={2}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-primary)',
-              fontSize: '14px',
-              resize: 'none'
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '8px', display: 'block' }}>
-            Back (Answer)
-          </label>
-          <textarea
-            placeholder="Enter the answer or definition..."
-            value={currentCard.back}
-            onChange={(e) => setCurrentCard({ ...currentCard, back: e.target.value })}
-            rows={2}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-primary)',
-              fontSize: '14px',
-              resize: 'none'
-            }}
-          />
-        </div>
-
-        <button
-          onClick={addCard}
-          style={{
-            width: '100%',
-            padding: '12px',
-            background: 'var(--accent-teal)',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#fff'
-          }}
-        >
-          + Add Card
-        </button>
-      </div>
-
-      {/* Cards Preview */}
-      {cards.length > 0 && (
-        <div style={{
-          background: 'var(--bg-secondary)',
-          borderRadius: 'var(--radius-xl)',
-          padding: '20px',
-          border: '1px solid var(--border-color)'
-        }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 16px 0' }}>
-            Cards ({cards.length})
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {cards.map((card, idx) => (
-              <div key={card.id || idx} style={{
-                padding: '12px',
-                background: 'var(--bg-tertiary)',
-                borderRadius: '8px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '13px', fontWeight: '500', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    Front: {card.front}
-                  </p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    Back: {card.back}
-                  </p>
-                </div>
-                <button
-                  onClick={() => removeCard(idx)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--danger)',
-                    padding: '8px'
-                  }}
-                >
-                  <Icon name="trash-2" size={16} />
-                </button>
-              </div>
-            ))}
+      <div style={{ padding: 20 }}>
+        {showAdd && (
+          <div style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, marginBottom: 20, border: '1px solid var(--border-color)' }}>
+            <input type="text" value={newCard.front} onChange={(e) => setNewCard({ ...newCard, front: e.target.value })} placeholder="Front (question)..." style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: 14, marginBottom: 12 }} />
+            <input type="text" value={newCard.back} onChange={(e) => setNewCard({ ...newCard, back: e.target.value })} placeholder="Back (answer)..." style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: 14, marginBottom: 12 }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={addCard} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>Add Card</button>
+              <button onClick={() => setShowAdd(false)} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Save Button */}
-      <button
-        onClick={saveDeck}
-        style={{
-          padding: '16px',
-          background: 'var(--accent-teal)',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: 'pointer',
-          fontSize: '16px',
-          fontWeight: '700',
-          color: '#fff'
-        }}
-      >
-        Create Deck
-      </button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 12 }}>
+          {cards.map(card => (
+            <div key={card.id} style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, border: '1px solid var(--border-color)', position: 'relative' }}>
+              <button onClick={() => deleteCard(card.id)} style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}>×</button>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Front: {card.front}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Back: {card.back}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
-
-window.FlashcardBuilder = FlashcardBuilder;
