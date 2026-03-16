@@ -948,14 +948,6 @@ function LearnoraApp() {
           <FocusList onBack={() => handleNavigate('dashboard')} />
         )}
 
-          -->
-        )}
-
-          </>
-        )}
-
-          </>
-        )}
       </main>
 
       {/* Modals */}
