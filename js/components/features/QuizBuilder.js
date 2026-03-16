@@ -1,242 +1,58 @@
-const QuizBuilder = ({ onSave, showToast }) => {
+const QuizBuilder = ({ onClose }) => {
   const [questions, setQuestions] = React.useState([]);
-  const [quizTitle, setQuizTitle] = React.useState('');
-  const [quizDescription, setQuizDescription] = React.useState('');
-  const [currentQuestion, setCurrentQuestion] = React.useState({
-    text: '',
-    options: ['', '', '', ''],
-    correctIndex: 0
-  });
-  const isMobile = window.innerWidth <= 768;
+  const [showAdd, setShowAdd] = React.useState(false);
+  const [newQ, setNewQ] = React.useState({ question: '', options: ['', '', '', ''], correct: 0 });
 
   const addQuestion = () => {
-    if (!currentQuestion.text.trim()) {
-      showToast?.('Please enter a question', 'error');
-      return;
-    }
-    setQuestions([...questions, { ...currentQuestion, id: Date.now() }]);
-    setCurrentQuestion({
-      text: '',
-      options: ['', '', '', ''],
-      correctIndex: 0
-    });
+    if (!newQ.question) return;
+    setQuestions([...questions, { id: Date.now(), ...newQ }]);
+    setNewQ({ question: '', options: ['', '', '', ''], correct: 0 });
+    setShowAdd(false);
   };
 
-  const removeQuestion = (idx) => {
-    setQuestions(questions.filter((_, i) => i !== idx));
-  };
-
-  const saveQuiz = () => {
-    if (!quizTitle.trim()) {
-      showToast?.('Please enter a quiz title', 'error');
-      return;
-    }
-    if (questions.length === 0) {
-      showToast?.('Please add at least one question', 'error');
-      return;
-    }
-    onSave?.({
-      title: quizTitle,
-      description: quizDescription,
-      questions,
-      createdAt: Date.now()
-    });
-    showToast?.('Quiz created successfully!', 'success');
-  };
+  const deleteQ = (id) => setQuestions(questions.filter(q => q.id !== id));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Quiz Info */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        borderRadius: 'var(--radius-xl)',
-        padding: '20px',
-        border: '1px solid var(--border-color)'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 16px 0' }}>Quiz Details</h3>
-        <input
-          type="text"
-          placeholder="Quiz title..."
-          value={quizTitle}
-          onChange={(e) => setQuizTitle(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            marginBottom: '12px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-primary)',
-            fontSize: '14px'
-          }}
-        />
-        <textarea
-          placeholder="Quiz description (optional)..."
-          value={quizDescription}
-          onChange={(e) => setQuizDescription(e.target.value)}
-          rows={2}
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-primary)',
-            fontSize: '14px',
-            resize: 'none'
-          }}
-        />
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-primary)', zIndex: 1000, overflow: 'auto', animation: 'fadeIn 0.2s ease' }}>
+      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>← Back</button>
+          <h2 style={{ margin: 0, fontSize: 20 }}>✍️ Quiz Builder</h2>
+        </div>
+        <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>+ Add</button>
       </div>
 
-      {/* Add Question */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        borderRadius: 'var(--radius-xl)',
-        padding: '20px',
-        border: '1px solid var(--border-color)'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 16px 0' }}>Add Question</h3>
-        <textarea
-          placeholder="Enter your question..."
-          value={currentQuestion.text}
-          onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })}
-          rows={2}
-          style={{
-            width: '100%',
-            padding: '12px',
-            marginBottom: '16px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-primary)',
-            fontSize: '14px',
-            resize: 'none'
-          }}
-        />
+      <div style={{ padding: 20 }}>
+        {showAdd && (
+          <div style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, marginBottom: 20, border: '1px solid var(--border-color)' }}>
+            <input type="text" value={newQ.question} onChange={(e) => setNewQ({ ...newQ, question: e.target.value })} placeholder="Question..." style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: 14, marginBottom: 12 }} />
+            {newQ.options.map((opt, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <button onClick={() => setNewQ({ ...newQ, correct: i })} style={{ width: 24, height: 24, borderRadius: '50%', border: newQ.correct === i ? 'none' : '2px solid var(--border-color)', background: newQ.correct === i ? '#10b981' : 'transparent', cursor: 'pointer' }}>{newQ.correct === i && '✓'}</button>
+                <input type="text" value={opt} onChange={(e) => { const opts = [...newQ.options]; opts[i] = e.target.value; setNewQ({ ...newQ, options: opts }); }} placeholder={`Option ${i + 1}`} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: 13 }} />
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button onClick={addQuestion} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>Add Question</button>
+              <button onClick={() => setShowAdd(false)} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-          {currentQuestion.options.map((opt, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                onClick={() => setCurrentQuestion({ ...currentQuestion, correctIndex: idx })}
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  border: currentQuestion.correctIndex === idx ? 'none' : '2px solid var(--border-color)',
-                  background: currentQuestion.correctIndex === idx ? 'var(--success)' : 'transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff',
-                  fontSize: '12px'
-                }}
-              >
-                {currentQuestion.correctIndex === idx && '✓'}
-              </button>
-              <input
-                type="text"
-                placeholder={`Option ${idx + 1}`}
-                value={opt}
-                onChange={(e) => {
-                  const newOptions = [...currentQuestion.options];
-                  newOptions[idx] = e.target.value;
-                  setCurrentQuestion({ ...currentQuestion, options: newOptions });
-                }}
-                style={{
-                  flex: 1,
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--bg-primary)',
-                  fontSize: '13px'
-                }}
-              />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {questions.map((q, idx) => (
+            <div key={q.id} style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Q{idx + 1}: {q.question}</span>
+                <button onClick={() => deleteQ(q.id)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}>🗑️</button>
+              </div>
+              {q.options.map((opt, i) => (
+                <div key={i} style={{ fontSize: 13, color: i === q.correct ? '#10b981' : 'var(--text-secondary)', marginLeft: 16 }}>{i + 1}. {opt} {i === q.correct && '✓'}</div>
+              ))}
             </div>
           ))}
         </div>
-
-        <button
-          onClick={addQuestion}
-          style={{
-            width: '100%',
-            padding: '12px',
-            background: 'var(--bg-tertiary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: 'var(--text-primary)'
-          }}
-        >
-          + Add Question
-        </button>
       </div>
-
-      {/* Questions List */}
-      {questions.length > 0 && (
-        <div style={{
-          background: 'var(--bg-secondary)',
-          borderRadius: 'var(--radius-xl)',
-          padding: '20px',
-          border: '1px solid var(--border-color)'
-        }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 16px 0' }}>
-            Questions ({questions.length})
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {questions.map((q, idx) => (
-              <div key={q.id || idx} style={{
-                padding: '12px',
-                background: 'var(--bg-tertiary)',
-                borderRadius: '8px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', margin: '0 0 4px 0' }}>
-                    {idx + 1}. {q.text.substring(0, 50)}...
-                  </p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 }}>
-                    {q.options.filter(o => o).length} options
-                  </p>
-                </div>
-                <button
-                  onClick={() => removeQuestion(idx)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--danger)',
-                    padding: '8px'
-                  }}
-                >
-                  <Icon name="trash-2" size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Save Button */}
-      <button
-        onClick={saveQuiz}
-        style={{
-          padding: '16px',
-          background: 'var(--primary-500)',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: 'pointer',
-          fontSize: '16px',
-          fontWeight: '700',
-          color: '#fff'
-        }}
-      >
-        Create Quiz
-      </button>
     </div>
   );
 };
-
-window.QuizBuilder = QuizBuilder;
