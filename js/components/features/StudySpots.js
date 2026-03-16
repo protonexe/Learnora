@@ -1,283 +1,160 @@
-const StudySpots = ({ onClose }) => {
-  const [spots, setSpots] = React.useState([
-    { id: 1, name: 'University Library', type: 'library', distance: 0.3, rating: 4.8, wifi: true, power: true, noise: 'quiet', hours: '7AM-11PM', lat: 40.7128, lng: -74.0060 },
-    { id: 2, name: 'Campus Coffee House', type: 'cafe', distance: 0.5, rating: 4.5, wifi: true, power: true, noise: 'moderate', hours: '6AM-9PM', lat: 40.7138, lng: -74.0070 },
-    { id: 3, name: 'Student Center', type: 'campus', distance: 0.2, rating: 4.2, wifi: true, power: true, noise: 'moderate', hours: '8AM-10PM', lat: 40.7118, lng: -74.0050 },
-    { id: 4, name: 'Park Study Zone', type: 'outdoor', distance: 0.8, rating: 4.6, wifi: false, power: false, noise: 'moderate', hours: 'Open 24h', lat: 40.7148, lng: -74.0080 },
-    { id: 5, name: '24-Hour Study Hall', type: 'library', distance: 1.2, rating: 4.4, wifi: true, power: true, noise: 'quiet', hours: 'Open 24h', lat: 40.7158, lng: -74.0090 },
-  ]);
-  const [filter, setFilter] = React.useState('all');
-  const [sortBy, setSortBy] = React.useState('distance');
-  const [favorites, setFavorites] = React.useState(() => {
-    const saved = localStorage.getItem('learnora-study-spots-favorites');
-    return saved ? JSON.parse(saved) : [];
+const StudySpots = ({ onBack, showToast }) => {
+  const isMobile = window.innerWidth <= 768;
+  const [spots, setSpots] = React.useState(() => {
+    return JSON.parse(localStorage.getItem('study-spots') || '[]');
   });
-  const [showMap, setShowMap] = React.useState(false);
+  const [showAddForm, setShowAddForm] = React.useState(false);
+  const [newSpot, setNewSpot] = React.useState({ name: '', type: 'library', notes: '' });
+
+  React.useEffect(() => {
+    localStorage.setItem('study-spots', JSON.stringify(spots));
+  }, [spots]);
+
+  const addSpot = () => {
+    if (!newSpot.name.trim()) return;
+    const spot = { id: Date.now(), ...newSpot, rating: 0, visits: 0, lastVisited: null };
+    setSpots([...spots, spot]);
+    setNewSpot({ name: '', type: 'library', notes: '' });
+    setShowAddForm(false);
+    showToast?.('Study spot added!', 'success');
+  };
+
+  const deleteSpot = (id) => {
+    setSpots(spots.filter(s => s.id !== id));
+  };
+
+  const rateSpot = (id, rating) => {
+    setSpots(spots.map(s => s.id === id ? { ...s, rating } : s));
+  };
+
+  const visitSpot = (id) => {
+    setSpots(spots.map(s => s.id === id ? { ...s, visits: s.visits + 1, lastVisited: new Date().toISOString() } : s));
+    showToast?.('Enjoy your study session!', 'info');
+  };
 
   const types = [
-    { value: 'all', label: 'All Spots', icon: '📍' },
-    { value: 'library', label: 'Libraries', icon: '📚' },
-    { value: 'cafe', label: 'Cafes', icon: '☕' },
-    { value: 'campus', label: 'Campus', icon: '🏫' },
-    { value: 'outdoor', label: 'Outdoor', icon: '🌳' },
+    { id: 'library', icon: '🏛️', label: 'Library' },
+    { id: 'cafe', icon: '☕', label: 'Cafe' },
+    { id: 'home', icon: '🏠', label: 'Home' },
+    { id: 'park', icon: '🌳', label: 'Park' },
+    { id: 'university', icon: '🎓', label: 'University' },
+    { id: 'other', icon: '📍', label: 'Other' }
   ];
 
-  const saveFavorites = (favs) => {
-    setFavorites(favs);
-    localStorage.setItem('learnora-study-spots-favorites', JSON.stringify(favs));
-  };
-
-  const toggleFavorite = (id) => {
-    if (favorites.includes(id)) {
-      saveFavorites(favorites.filter(f => f !== id));
-    } else {
-      saveFavorites([...favorites, id]);
-    }
-  };
-
-  const filteredSpots = spots
-    .filter(spot => filter === 'all' || spot.type === filter)
-    .sort((a, b) => {
-      if (sortBy === 'distance') return a.distance - b.distance;
-      if (sortBy === 'rating') return b.rating - a.rating;
-      return 0;
-    });
-
-  const getTypeIcon = (type) => {
-    const t = types.find(t => t.value === type);
-    return t?.icon || '📍';
-  };
-
-  const getNoiseColor = (noise) => {
-    if (noise === 'quiet') return '#10b981';
-    if (noise === 'moderate') return '#f59e0b';
-    return '#f43f5e';
-  };
-
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'var(--bg-primary)',
-      zIndex: 1000,
-      overflow: 'auto',
-      animation: 'fadeIn 0.2s ease'
-    }}>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        borderBottom: '1px solid var(--border-color)',
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={onClose} style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'var(--bg)',
-            color: 'var(--text-primary)',
-            cursor: 'pointer'
-          }}>
-            ← Back
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={onBack} style={styles.backButton}>
+            <Icon name="arrow-left" size={20} />
           </button>
-          <h2 style={{ margin: 0, fontSize: 20 }}>📍 Study Spots</h2>
+          <h1 style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: '700', margin: 0 }}>
+            📍 Study Spots
+          </h1>
         </div>
-        <button
-          onClick={() => setShowMap(!showMap)}
-          style={{
-            padding: '8px 16px',
-            borderRadius: 8,
-            border: 'none',
-            background: showMap ? 'var(--primary)' : 'var(--bg)',
-            color: showMap ? 'white' : 'var(--text-primary)',
-            cursor: 'pointer',
-            fontSize: 14
-          }}
-        >
-          {showMap ? '📋 List' : '🗺️ Map'}
+        <button onClick={() => setShowAddForm(true)} style={styles.addButton}>
+          <Icon name="plus" size={18} /> Add Spot
         </button>
       </div>
 
-      <div style={{ padding: 20, maxWidth: 800, margin: '0 auto' }}>
-        {/* Filters */}
-        <div style={{
-          display: 'flex',
-          gap: 8,
-          marginBottom: 16,
-          overflowX: 'auto',
-          paddingBottom: 8
-        }}>
-          {types.map(t => (
-            <button
-              key={t.value}
-              onClick={() => setFilter(t.value)}
-              style={{
-                padding: '10px 16px',
-                borderRadius: 20,
-                border: 'none',
-                background: filter === t.value ? 'var(--primary)' : 'var(--bg-secondary)',
-                color: filter === t.value ? 'white' : 'var(--text-primary)',
-                cursor: 'pointer',
-                fontSize: 13,
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-            >
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Sort */}
-        <div style={{
-          display: 'flex',
-          gap: 8,
-          marginBottom: 20
-        }}>
-          <span style={{ fontSize: 13, color: 'var(--text-secondary)', alignSelf: 'center' }}>Sort by:</span>
+      {/* Add Form */}
+      {showAddForm && (
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Add New Spot</h3>
+          <input
+            type="text"
+            value={newSpot.name}
+            onChange={(e) => setNewSpot({ ...newSpot, name: e.target.value })}
+            placeholder="Spot name"
+            style={styles.input}
+          />
           <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: 8,
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-secondary)',
-              color: 'var(--text-primary)',
-              fontSize: 13,
-              cursor: 'pointer'
-            }}
+            value={newSpot.type}
+            onChange={(e) => setNewSpot({ ...newSpot, type: e.target.value })}
+            style={styles.select}
           >
-            <option value="distance">📍 Nearest</option>
-            <option value="rating">⭐ Highest Rated</option>
+            {types.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}
           </select>
+          <textarea
+            value={newSpot.notes}
+            onChange={(e) => setNewSpot({ ...newSpot, notes: e.target.value })}
+            placeholder="Notes (wifi, noise level, etc.)"
+            style={styles.textarea}
+            rows={2}
+          />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={addSpot} style={styles.primaryButton}>Add</button>
+            <button onClick={() => setShowAddForm(false)} style={styles.cancelButton}>Cancel</button>
+          </div>
         </div>
+      )}
 
-        {/* Spots List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {filteredSpots.map(spot => (
-            <div
-              key={spot.id}
-              style={{
-                background: 'var(--bg-secondary)',
-                borderRadius: 12,
-                padding: 16,
-                border: '1px solid var(--border-color)'
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: 12
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    background: 'var(--primary)' + '15',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 24
-                  }}>
-                    {getTypeIcon(spot.type)}
-                  </div>
+      {/* Spots Grid */}
+      {spots.length === 0 ? (
+        <div style={styles.emptyState}>
+          <p>No study spots saved yet.</p>
+          <p>Add your favorite places to study!</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
+          {spots.map(spot => (
+            <div key={spot.id} style={styles.spotCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '32px' }}>{types.find(t => t.id === spot.type)?.icon}</span>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)' }}>{spot.name}</h3>
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                      {spot.distance} km away • {spot.hours}
-                    </span>
+                    <h3 style={styles.spotName}>{spot.name}</h3>
+                    <p style={styles.spotType}>{types.find(t => t.id === spot.type)?.label}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => toggleFavorite(spot.id)}
-                  style={{
-                    padding: '8px',
-                    borderRadius: 8,
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    fontSize: 20
-                  }}
-                >
-                  {favorites.includes(spot.id) ? '❤️' : '🤍'}
+                <button onClick={() => deleteSpot(spot.id)} style={styles.deleteButton}>
+                  <Icon name="trash-2" size={16} />
                 </button>
               </div>
-
-              <div style={{
-                display: 'flex',
-                gap: 8,
-                marginBottom: 12,
-                flexWrap: 'wrap'
-              }}>
-                <span style={{
-                  padding: '4px 10px',
-                  background: '#fbbf2415',
-                  color: '#fbbf24',
-                  borderRadius: 6,
-                  fontSize: 12,
-                  fontWeight: 600
-                }}>
-                  ⭐ {spot.rating}
-                </span>
-                <span style={{
-                  padding: '4px 10px',
-                  background: spot.wifi ? '#10b98115' : '#f43f5e15',
-                  color: spot.wifi ? '#10b981' : '#f43f5e',
-                  borderRadius: 6,
-                  fontSize: 12
-                }}>
-                  📶 WiFi {spot.wifi ? '✓' : '✗'}
-                </span>
-                <span style={{
-                  padding: '4px 10px',
-                  background: spot.power ? '#10b98115' : '#f43f5e15',
-                  color: spot.power ? '#10b981' : '#f43f5e',
-                  borderRadius: 6,
-                  fontSize: 12
-                }}>
-                  🔌 Power {spot.power ? '✓' : '✗'}
-                </span>
-                <span style={{
-                  padding: '4px 10px',
-                  background: getNoiseColor(spot.noise) + '15',
-                  color: getNoiseColor(spot.noise),
-                  borderRadius: 6,
-                  fontSize: 12
-                }}>
-                  🔊 {spot.noise.charAt(0).toUpperCase() + spot.noise.slice(1)}
-                </span>
+              {spot.notes && <p style={styles.spotNotes}>{spot.notes}</p>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button key={star} onClick={() => rateSpot(spot.id, star)} style={styles.starButton}>
+                      {star <= spot.rating ? '⭐' : '☆'}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={styles.visitCount}>{spot.visits} visits</p>
+                </div>
               </div>
-
-              <button style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: 8,
-                border: '1px solid var(--border-color)',
-                background: 'var(--bg)',
-                color: 'var(--text-primary)',
-                cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: 500
-              }}>
-                🚀 Get Directions
+              <button onClick={() => visitSpot(spot.id)} style={styles.visitButton}>
+                Check In
               </button>
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
+
+const styles = {
+  backButton: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', display: 'flex' },
+  addButton: { display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 16px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  card: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '20px' },
+  cardTitle: { fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: 'var(--text-primary)' },
+  input: { width: '100%', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '12px' },
+  select: { width: '100%', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '12px' },
+  textarea: { width: '100%', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '12px', resize: 'vertical' },
+  primaryButton: { background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  cancelButton: { background: 'var(--bg-primary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  emptyState: { textAlign: 'center', padding: '60px 20px', color: 'var(--text-tertiary)' },
+  spotCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px' },
+  spotName: { fontSize: '18px', fontWeight: '600', margin: 0, color: 'var(--text-primary)' },
+  spotType: { fontSize: '13px', color: 'var(--text-tertiary)', margin: '4px 0 0 0' },
+  spotNotes: { fontSize: '14px', color: 'var(--text-secondary)', margin: '12px 0', lineHeight: '1.5' },
+  deleteButton: { background: 'transparent', border: 'none', padding: '4px', cursor: 'pointer', color: 'var(--text-tertiary)' },
+  starButton: { background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer', padding: '0' },
+  visitCount: { fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 },
+  visitButton: { width: '100%', marginTop: '12px', background: 'var(--primary-100)', color: 'var(--primary-600)', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }
+};
+
+window.StudySpots = StudySpots;

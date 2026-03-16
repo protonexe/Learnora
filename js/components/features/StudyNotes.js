@@ -1,81 +1,87 @@
-const StudyNotes = ({ onClose }) => {
-  const [notes, setNotes] = React.useState(() => {
-    const saved = localStorage.getItem('learnora-study-notes');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [searchTerm, setSearchTerm] = React.useState('');
+const StudyNotes = ({ onBack, showToast }) => {
+  const isMobile = window.innerWidth <= 768;
+  const [notes, setNotes] = React.useState(() => JSON.parse(localStorage.getItem('study-notes') || '[]'));
   const [showAdd, setShowAdd] = React.useState(false);
   const [newNote, setNewNote] = React.useState({ title: '', content: '', subject: '' });
 
-  const subjects = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 'English'];
-
-  const saveNotes = (newNotes) => {
-    setNotes(newNotes);
-    localStorage.setItem('learnora-study-notes', JSON.stringify(newNotes));
-  };
+  React.useEffect(() => { localStorage.setItem('study-notes', JSON.stringify(notes)); }, [notes]);
 
   const addNote = () => {
     if (!newNote.title) return;
-    saveNotes([...notes, { id: Date.now(), ...newNote, date: new Date().toISOString() }]);
+    setNotes([{ id: Date.now(), ...newNote, createdAt: new Date().toISOString() }, ...notes]);
     setNewNote({ title: '', content: '', subject: '' });
     setShowAdd(false);
+    showToast?.('Note saved!', 'success');
   };
 
-  const deleteNote = (id) => {
-    saveNotes(notes.filter(n => n.id !== id));
-  };
+  const deleteNote = (id) => setNotes(notes.filter(n => n.id !== id));
 
-  const filtered = notes.filter(n => n.title.toLowerCase().includes(searchTerm.toLowerCase()) || n.content.toLowerCase().includes(searchTerm.toLowerCase()));
+  const subjects = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 'English', 'General'];
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-primary)', zIndex: 1000, overflow: 'auto', animation: 'fadeIn 0.2s ease' }}>
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>← Back</button>
-            <h2 style={{ margin: 0, fontSize: 20 }}>📝 Study Notes</h2>
-          </div>
-          <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>+ Add</button>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={onBack} style={styles.backButton}><Icon name="arrow-left" size={20} /></button>
+          <h1 style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: '700', margin: 0 }}>📝 Study Notes</h1>
         </div>
-        <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search notes..." style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: 14 }} />
+        <button onClick={() => setShowAdd(true)} style={styles.addButton}><Icon name="plus" size={18} /> Add</button>
       </div>
 
-      <div style={{ padding: 20 }}>
-        {showAdd && (
-          <div style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, marginBottom: 20, border: '1px solid var(--border-color)' }}>
-            <input type="text" value={newNote.title} onChange={(e) => setNewNote({ ...newNote, title: e.target.value })} placeholder="Note title..." style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: 14, marginBottom: 12 }} />
-            <textarea value={newNote.content} onChange={(e) => setNewNote({ ...newNote, content: e.target.value })} placeholder="Note content..." style={{ width: '100%', minHeight: 80, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: 14, fontFamily: 'inherit', marginBottom: 12, resize: 'vertical' }} />
-            <select value={newNote.subject} onChange={(e) => setNewNote({ ...newNote, subject: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: 14, marginBottom: 12 }}>
-              <option value="">Select Subject</option>
-              {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={addNote} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>Save Note</button>
-              <button onClick={() => setShowAdd(false)} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
-            </div>
+      {showAdd && (
+        <div style={styles.card}>
+          <input type="text" value={newNote.title} onChange={(e) => setNewNote({...newNote, title: e.target.value})} placeholder="Note title" style={styles.input} />
+          <select value={newNote.subject} onChange={(e) => setNewNote({...newNote, subject: e.target.value})} style={styles.select}>
+            <option value="">Select subject</option>
+            {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <textarea value={newNote.content} onChange={(e) => setNewNote({...newNote, content: e.target.value})} placeholder="Write your notes..." style={styles.textarea} rows={4} />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={addNote} style={styles.primaryButton}>Save</button>
+            <button onClick={() => setShowAdd(false)} style={styles.cancelButton}>Cancel</button>
           </div>
-        )}
+        </div>
+      )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>No notes found</div>
-          ) : (
-            filtered.map(note => (
-              <div key={note.id} style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, border: '1px solid var(--border-color)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 15, color: 'var(--text-primary)' }}>{note.title}</h3>
-                  <button onClick={() => deleteNote(note.id)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 14 }}>🗑️</button>
+      {notes.length === 0 ? (
+        <div style={styles.emptyState}><p>No notes yet. Start taking notes!</p></div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
+          {notes.map(note => (
+            <div key={note.id} style={styles.noteCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h3 style={styles.noteTitle}>{note.title}</h3>
+                  <span style={styles.noteSubject}>{note.subject}</span>
                 </div>
-                <p style={{ margin: '0 0 8px 0', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{note.content.slice(0, 100)}{note.content.length > 100 ? '...' : ''}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-tertiary)' }}>
-                  <span>{note.subject}</span>
-                  <span>{new Date(note.date).toLocaleDateString()}</span>
-                </div>
+                <button onClick={() => deleteNote(note.id)} style={styles.deleteButton}>×</button>
               </div>
-            ))
-          )}
+              <p style={styles.noteContent}>{note.content}</p>
+              <p style={styles.noteDate}>{new Date(note.createdAt).toLocaleDateString()}</p>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
+
+const styles = {
+  backButton: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', display: 'flex' },
+  addButton: { display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 16px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  card: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '20px' },
+  input: { width: '100%', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '12px' },
+  select: { width: '100%', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '12px' },
+  textarea: { width: '100%', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '12px', resize: 'vertical' },
+  primaryButton: { background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  cancelButton: { background: 'var(--bg-primary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  emptyState: { textAlign: 'center', padding: '60px', color: 'var(--text-tertiary)' },
+  noteCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px' },
+  noteTitle: { fontSize: '16px', fontWeight: '600', margin: 0, color: 'var(--text-primary)' },
+  noteSubject: { fontSize: '12px', color: 'var(--primary-500)', marginTop: '4px', display: 'inline-block', padding: '2px 8px', background: 'var(--primary-100)', borderRadius: '4px' },
+  noteContent: { fontSize: '14px', color: 'var(--text-secondary)', margin: '12px 0', lineHeight: '1.5' },
+  noteDate: { fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 },
+  deleteButton: { background: 'transparent', border: 'none', fontSize: '20px', color: 'var(--text-tertiary)', cursor: 'pointer' }
+};
+
+window.StudyNotes = StudyNotes;

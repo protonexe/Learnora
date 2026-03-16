@@ -1,11 +1,35 @@
-const MotivationalBanner = ({ onClose }) => {
+const MotivationalBanner = ({ onBack }) => {
+  const banners = [
+    { text: 'Every expert was once a beginner.', bg: '#6366f1' },
+    { text: 'Small steps lead to big changes.', bg: '#10b981' },
+    { text: 'Your future self will thank you.', bg: '#f59e0b' },
+    { text: 'Focus on progress, not perfection.', bg: '#ef4444' }
+  ];
+  const [current, setCurrent] = React.useState(0);
+
+  React.useEffect(() => {
+    const t = setInterval(() => setCurrent((current + 1) % banners.length), 5000);
+    return () => clearInterval(t);
+  }, [current]);
+
   return (
-    <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'linear-gradient(135deg,#1e1b4b,#312e81)',zIndex:1000,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',color:'white',padding:40}}>
-      <button onClick={onClose} style={{position:'absolute',top:20,right:20,padding:'10px',borderRadius:8,border:'none',background:'rgba(255,255,255,0.1)',color:'white',cursor:'pointer'}}>×</button>
-      <div style={{fontSize:48,marginBottom:24}}>💪</div>
-      <h2 style={{fontSize:28,textAlign:'center',marginBottom:16}}>You Got This!</h2>
-      <p style={{textAlign:'center',opacity:0.8,fontSize:16,lineHeight:1.6}}>"The secret of getting ahead is getting started."</p>
-      <p style={{opacity:0.6,marginTop:24}}>- Mark Twain</p>
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>Motivation</h1>
+      </header>
+      <div style={{ padding: '20px' }}>
+        <div style={{ background: banners[current].bg, padding: '50px', borderRadius: '25px', color: 'white', textAlign: 'center', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p style={{ fontSize: '28px', fontWeight: '600', lineHeight: '1.4' }}>{banners[current].text}</p>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
+          {banners.map((_, i) => (
+            <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: i === current ? '#6366f1' : '#e5e7eb' }} />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
+
+window.MotivationalBanner = MotivationalBanner;

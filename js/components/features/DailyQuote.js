@@ -1,17 +1,28 @@
-const DailyQuote = ({ onClose }) => {
+const DailyQuote = ({ onBack }) => {
   const quotes = [
-    { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
     { text: "Education is the passport to the future.", author: "Malcolm X" },
-    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "The beautiful thing about learning is that no one can take it away.", author: "B.B. King" },
+    { text: "Live as if you were to die tomorrow. Learn as if you were to live forever.", author: "Gandhi" },
+    { text: "An investment in knowledge pays the best interest.", author: "Franklin" }
   ];
-  const quote = quotes[Math.floor(Date.now() / 86400000) % quotes.length];
+
+  const [quote] = React.useState(quotes[Math.floor(Math.random() * quotes.length)]);
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, color: 'white' }}>
-      <button onClick={onClose} style={{ position: 'absolute', top: 20, right: 20, padding: '10px 16px', borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}>Close</button>
-      <div style={{ fontSize: 48, marginBottom: 24 }}>💬</div>
-      <p style={{ fontSize: 24, textAlign: 'center', lineHeight: 1.6, marginBottom: 24, fontStyle: 'italic' }}>"{quote.text}"</p>
-      <p style={{ fontSize: 16, opacity: 0.7 }}>— {quote.author}</p>
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>Daily Quote</h1>
+      </header>
+      <div style={{ padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '20px', color: '#6366f1' }}>"</div>
+          <p style={{ fontSize: '24px', lineHeight: '1.6', color: '#1f2937', marginBottom: '25px', fontStyle: 'italic' }}>{quote.text}</p>
+          <p style={{ color: '#6b7280', fontSize: '18px' }}>— {quote.author}</p>
+        </div>
+      </div>
     </div>
   );
 };
+
+window.DailyQuote = DailyQuote;

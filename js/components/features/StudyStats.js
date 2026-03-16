@@ -1,232 +1,121 @@
-const StudyStats = ({ onClose }) => {
-  const [timeRange, setTimeRange] = React.useState('week');
-  const [stats, setStats] = React.useState(() => {
-    const saved = localStorage.getItem('learnora-study-stats');
-    return saved ? JSON.parse(saved) : {
-      totalHours: 0,
-      sessionsCompleted: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      averageSession: 25,
-      weeklyData: []
-    };
+const StudyStats = ({ onBack, showToast }) => {
+  const isMobile = window.innerWidth <= 768;
+  const [sessions, setSessions] = React.useState(() => {
+    return JSON.parse(localStorage.getItem('study-sessions') || '[]');
+  });
+  const [streak, setStreak] = React.useState(() => {
+    return JSON.parse(localStorage.getItem('learnora-streak') || '{ "current": 0, "longest": 0 }');
   });
 
-  const saveStats = (newStats) => {
-    setStats(newStats);
-    localStorage.setItem('learnora-study-stats', JSON.stringify(newStats));
-  };
+  const totalTime = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+  const totalHours = Math.floor(totalTime / 60);
+  const totalMinutes = totalTime % 60;
+  const avgPerDay = sessions.length > 0 ? Math.round(totalTime / 7) : 0;
+  const longestSession = sessions.length > 0 ? Math.max(...sessions.map(s => s.duration || 0)) : 0;
 
-  const generateMockData = () => {
-    const weeklyData = [
-      { day: 'Mon', hours: 2.5, sessions: 3 },
-      { day: 'Tue', hours: 3.2, sessions: 4 },
-      { day: 'Wed', hours: 1.8, sessions: 2 },
-      { day: 'Thu', hours: 4.0, sessions: 5 },
-      { day: 'Fri', hours: 2.0, sessions: 2 },
-      { day: 'Sat', hours: 3.5, sessions: 4 },
-      { day: 'Sun', hours: 2.8, sessions: 3 },
-    ];
-    
-    const totalHours = weeklyData.reduce((a, b) => a + b.hours, 0);
-    const sessionsCompleted = weeklyData.reduce((a, b) => b.sessions + a, 0);
-    
-    saveStats({
-      ...stats,
-      totalHours,
-      sessionsCompleted,
-      currentStreak: 7,
-      longestStreak: 21,
-      averageSession: Math.round(totalHours / sessionsCompleted * 60),
-      weeklyData
+  const weeklyData = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().slice(0, 10);
+    const daySessions = sessions.filter(s => s.date?.slice(0, 10) === dateStr);
+    weeklyData.push({
+      day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      hours: Math.round(daySessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60 * 10) / 10
     });
-  };
+  }
 
-  const achievements = [
-    { id: 1, name: 'First Step', description: 'Complete your first study session', icon: '🎯', unlocked: true },
-    { id: 2, name: 'Week Warrior', description: '7-day study streak', icon: '🔥', unlocked: true },
-    { id: 3, name: 'Century Club', description: '100 hours of study', icon: '💯', unlocked: false },
-    { id: 4, name: 'Night Owl', description: 'Study after midnight', icon: '🦉', unlocked: true },
-    { id: 5, name: 'Early Bird', description: 'Study before 7 AM', icon: '🐦', unlocked: false },
-    { id: 6, name: 'Marathon', description: '4+ hour study session', icon: '🏃', unlocked: false },
-  ];
-
-  const subjectBreakdown = [
-    { subject: 'Mathematics', hours: 12, color: '#f43f5e' },
-    { subject: 'Physics', hours: 8, color: '#14b8a6' },
-    { subject: 'Chemistry', hours: 6, color: '#0ea5e9' },
-    { subject: 'History', hours: 4, color: '#8b5cf6' },
-  ];
-
-  const maxHours = Math.max(...(stats.weeklyData.length > 0 ? stats.weeklyData : [{ hours: 0 }]).map(d => d.hours));
-
-  React.useEffect(() => {
-    if (stats.weeklyData.length === 0) {
-      generateMockData();
-    }
-  }, []);
+  const getMaxHours = () => Math.max(...weeklyData.map(d => d.hours), 1);
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'var(--bg-primary)',
-      zIndex: 1000,
-      overflow: 'auto',
-      animation: 'fadeIn 0.2s ease'
-    }}>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={onClose} style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            cursor: 'pointer'
-          }}>
-            ← Back
-          </button>
-          <h2 style={{ margin: 0, fontSize: 20, color: 'white' }}>📈 Study Statistics</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.backButton}>
+          <Icon name="arrow-left" size={20} />
+        </button>
+        <h1 style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: '700', margin: 0 }}>
+          📈 Study Statistics
+        </h1>
+      </div>
+
+      {/* Overview */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+        <div style={styles.statCard}>
+          <span style={styles.statValue}>{totalHours}h {totalMinutes}m</span>
+          <span style={styles.statLabel}>Total Time</span>
+        </div>
+        <div style={styles.statCard}>
+          <span style={styles.statValue}>{sessions.length}</span>
+          <span style={styles.statLabel}>Sessions</span>
+        </div>
+        <div style={styles.statCard}>
+          <span style={styles.statValue}>{streak.current || 0}</span>
+          <span style={styles.statLabel}>Day Streak</span>
+        </div>
+        <div style={styles.statCard}>
+          <span style={styles.statValue}>{avgPerDay}m</span>
+          <span style={styles.statLabel}>Avg/Day</span>
         </div>
       </div>
 
-      <div style={{ padding: 20, maxWidth: 800, margin: '0 auto' }}>
-        {/* Overview Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 12,
-          marginBottom: 24
-        }}>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 16,
-            border: '1px solid var(--border-color)'
-          }}>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Total Hours</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--primary)' }}>{stats.totalHours.toFixed(1)}h</div>
-          </div>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 16,
-            border: '1px solid var(--border-color)'
-          }}>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Sessions</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#10b981' }}>{stats.sessionsCompleted}</div>
-          </div>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 16,
-            border: '1px solid var(--border-color)'
-          }}>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Current Streak</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#f59e0b' }}>{stats.currentStreak} 🔥</div>
-          </div>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 16,
-            border: '1px solid var(--border-color)'
-          }}>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Longest Streak</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#8b5cf6' }}>{stats.longestStreak} 🔥</div>
-          </div>
-        </div>
-
-        {/* Weekly Chart */}
-        <div style={{
-          background: 'var(--bg-secondary)',
-          borderRadius: 12,
-          padding: 20,
-          marginBottom: 24,
-          border: '1px solid var(--border-color)'
-        }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: 16 }}>This Week</h3>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
-            {(stats.weeklyData.length > 0 ? stats.weeklyData : Array(7).fill({ hours: 0 })).map((day, idx) => (
-              <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{
-                  width: '100%',
-                  background: 'var(--primary)',
-                  borderRadius: '4px 4px 0 0',
-                  height: Math.max(10, (day.hours / maxHours) * 100),
-                  minHeight: 10,
-                  transition: 'height 0.3s ease'
-                }} />
-                <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 6 }}>{day.day}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Subject Breakdown */}
-        <div style={{
-          background: 'var(--bg-secondary)',
-          borderRadius: 12,
-          padding: 20,
-          marginBottom: 24,
-          border: '1px solid var(--border-color)'
-        }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: 16 }}>Subject Breakdown</h3>
-          {subjectBreakdown.map((subject, idx) => (
-            <div key={idx} style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{subject.subject}</span>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{subject.hours}h</span>
-              </div>
-              <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: (subject.hours / 12) * 100 + '%', background: subject.color }} />
-              </div>
+      {/* Weekly Chart */}
+      <div style={styles.card}>
+        <h3 style={styles.cardTitle}>This Week</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '150px', gap: '8px', paddingTop: '20px' }}>
+          {weeklyData.map((day, idx) => (
+            <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{day.hours}h</span>
+              <div style={{ width: '100%', background: 'var(--primary-200)', borderRadius: '6px 6px 0 0', height: `${(day.hours / getMaxHours()) * 100}px`, minHeight: day.hours > 0 ? '8px' : '4px', transition: 'height 0.3s' }} />
+              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{day.day}</span>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Achievements */}
-        <div style={{
-          background: 'var(--bg-secondary)',
-          borderRadius: 12,
-          padding: 20,
-          border: '1px solid var(--border-color)'
-        }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: 16 }}>🏆 Achievements</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-            {achievements.map(achievement => (
-              <div
-                key={achievement.id}
-                style={{
-                  textAlign: 'center',
-                  padding: 12,
-                  background: achievement.unlocked ? achievement.color + '15' : 'var(--bg)',
-                  borderRadius: 8,
-                  border: achievement.unlocked ? `1px solid ${achievement.color}` : '1px solid var(--border-color)',
-                  opacity: achievement.unlocked ? 1 : 0.5
-                }}
-              >
-                <div style={{ fontSize: 28, marginBottom: 4 }}>{achievement.icon}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>{achievement.name}</div>
-                <div style={{ fontSize: 9, color: 'var(--text-secondary)', marginTop: 2 }}>{achievement.description}</div>
-              </div>
-            ))}
+      {/* Achievements */}
+      <div style={styles.card}>
+        <h3 style={styles.cardTitle}>🏆 Achievements</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          <div style={{ ...styles.achievement, opacity: totalHours >= 1 ? 1 : 0.3 }}>
+            <span style={{ fontSize: '28px' }}>🌟</span>
+            <span style={styles.achievementLabel}>First Hour</span>
+          </div>
+          <div style={{ ...styles.achievement, opacity: streak.current >= 7 ? 1 : 0.3 }}>
+            <span style={{ fontSize: '28px' }}>🔥</span>
+            <span style={styles.achievementLabel}>Week Streak</span>
+          </div>
+          <div style={{ ...styles.achievement, opacity: sessions.length >= 10 ? 1 : 0.3 }}>
+            <span style={{ fontSize: '28px' }}>📚</span>
+            <span style={styles.achievementLabel}>10 Sessions</span>
+          </div>
+          <div style={{ ...styles.achievement, opacity: longestSession >= 60 ? 1 : 0.3 }}>
+            <span style={{ fontSize: '28px' }}>⏱️</span>
+            <span style={styles.achievementLabel}>1 Hour Session</span>
+          </div>
+          <div style={{ ...styles.achievement, opacity: totalHours >= 10 ? 1 : 0.3 }}>
+            <span style={{ fontSize: '28px' }}>🎯</span>
+            <span style={styles.achievementLabel}>10 Hours</span>
+          </div>
+          <div style={{ ...styles.achievement, opacity: streak.longest >= 30 ? 1 : 0.3 }}>
+            <span style={{ fontSize: '28px' }}>👑</span>
+            <span style={styles.achievementLabel}>Month Streak</span>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+const styles = {
+  backButton: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', display: 'flex' },
+  statCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', textAlign: 'center' },
+  statValue: { display: 'block', fontSize: '24px', fontWeight: '700', color: 'var(--primary-500)', marginBottom: '4px' },
+  statLabel: { fontSize: '12px', color: 'var(--text-tertiary)' },
+  card: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '20px' },
+  cardTitle: { fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: 'var(--text-primary)' },
+  achievement: { background: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', padding: '16px', textAlign: 'center', transition: 'opacity 0.3s' },
+  achievementLabel: { display: 'block', fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '8px' }
+};
+
+window.StudyStats = StudyStats;

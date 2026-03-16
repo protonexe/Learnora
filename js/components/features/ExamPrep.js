@@ -1,250 +1,165 @@
-const ExamPrep = ({ onClose }) => {
-  const [exams, setExams] = React.useState([
-    { id: 1, name: 'Midterm - Calculus', subject: 'Mathematics', date: '2026-03-20', duration: 120, status: 'upcoming', topics: ['Derivatives', 'Integrals', 'Limits'] },
-    { id: 2, name: 'Final - Physics', subject: 'Physics', date: '2026-03-25', duration: 180, status: 'upcoming', topics: ['Mechanics', 'Thermodynamics', 'Waves'] },
-    { id: 3, name: 'Quiz - Chemistry', subject: 'Chemistry', date: '2026-03-18', duration: 45, status: 'tomorrow', topics: ['Organic', 'Periodic Table'] },
-  ]);
-  const [studyPlan, setStudyPlan] = React.useState(() => {
-    const saved = localStorage.getItem('learnora-exam-plan');
-    return saved ? JSON.parse(saved) : [];
+const ExamPrep = ({ onBack, showToast, courses }) => {
+  const isMobile = window.innerWidth <= 768;
+  const [exams, setExams] = React.useState(() => {
+    return JSON.parse(localStorage.getItem('exam-prep') || '[]');
   });
-  const [selectedExam, setSelectedExam] = React.useState(null);
-  const [showPlanner, setShowPlanner] = React.useState(false);
+  const [showAdd, setShowAdd] = React.useState(false);
+  const [newExam, setNewExam] = React.useState({ subject: '', date: '', type: 'exam' });
 
-  const savePlan = (plan) => {
-    setStudyPlan(plan);
-    localStorage.setItem('learnora-exam-plan', JSON.stringify(plan));
+  React.useEffect(() => {
+    localStorage.setItem('exam-prep', JSON.stringify(exams));
+  }, [exams]);
+
+  const addExam = () => {
+    if (!newExam.subject || !newExam.date) return;
+    const exam = { id: Date.now(), ...newExam, status: 'not-started', score: null };
+    setExams([...exams, exam]);
+    setNewExam({ subject: '', date: '', type: 'exam' });
+    setShowAdd(false);
+    showToast?.('Exam added!', 'success');
   };
 
-  const generateStudyPlan = (exam) => {
-    const days = Math.ceil((new Date(exam.date) - new Date()) / (1000 * 60 * 60 * 24));
-    if (days <= 0) return;
-    
-    const topicsPerDay = Math.ceil(exam.topics.length / days);
-    const plan = [];
-    
-    for (let i = 0; i < days; i++) {
-      const dayTopics = exam.topics.slice(i * topicsPerDay, (i + 1) * topicsPerDay);
-      plan.push({
-        id: Date.now() + i,
-        examId: exam.id,
-        day: i + 1,
-        topics: dayTopics,
-        completed: false,
-        date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toLocaleDateString()
-      });
-    }
-    
-    savePlan([...studyPlan, ...plan]);
-  };
-
-  const toggleTopic = (planId) => {
-    savePlan(studyPlan.map(p => p.id === planId ? { ...p, completed: !p.completed } : p));
-  };
-
-  const getStatusColor = (status) => {
-    if (status === 'tomorrow') return '#f43f5e';
-    if (status === 'upcoming') return '#0ea5e9';
-    return '#10b981';
+  const deleteExam = (id) => {
+    setExams(exams.filter(e => e.id !== id));
   };
 
   const getDaysUntil = (date) => {
-    const diff = Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24));
-    if (diff < 0) return 'Past';
-    if (diff === 0) return 'Today';
-    if (diff === 1) return 'Tomorrow';
-    return `${diff} days`;
+    const diff = new Date(date) - new Date();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
   };
 
-  const totalTopics = studyPlan.filter(p => p.examId === selectedExam?.id).length;
-  const completedTopics = studyPlan.filter(p => p.examId === selectedExam?.id && p.completed).length;
-  const progress = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
+  const getUrgencyColor = (days) => {
+    if (days <= 3) return '#f43f5e';
+    if (days <= 7) return '#f59e0b';
+    return '#10b981';
+  };
+
+  const courseOptions = courses || [
+    { name: 'Mathematics' }, { name: 'Physics' }, { name: 'Chemistry' },
+    { name: 'Biology' }, { name: 'History' }, { name: 'English' }
+  ];
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'var(--bg-primary)',
-      zIndex: 1000,
-      overflow: 'auto',
-      animation: 'fadeIn 0.2s ease'
-    }}>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)',
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={onClose} style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            cursor: 'pointer'
-          }}>
-            ← Back
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={onBack} style={styles.backButton}>
+            <Icon name="arrow-left" size={20} />
           </button>
-          <h2 style={{ margin: 0, fontSize: 20, color: 'white' }}>📝 Exam Prep</h2>
+          <h1 style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: '700', margin: 0 }}>
+            📝 Exam Prep
+          </h1>
         </div>
+        <button onClick={() => setShowAdd(true)} style={styles.addButton}>
+          <Icon name="plus" size={18} /> Add Exam
+        </button>
       </div>
 
-      <div style={{ padding: 20, maxWidth: 700, margin: '0 auto' }}>
-        {/* Upcoming Exams */}
-        <h3 style={{ margin: '0 0 12px 0', fontSize: 14, color: 'var(--text-secondary)' }}>Upcoming Exams</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-          {exams.map(exam => (
-            <div
-              key={exam.id}
-              onClick={() => { setSelectedExam(exam); setShowPlanner(true); }}
-              style={{
-                background: 'var(--bg-secondary)',
-                borderRadius: 12,
-                padding: 16,
-                border: '1px solid var(--border-color)',
-                cursor: 'pointer'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)' }}>{exam.name}</h3>
-                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{exam.subject}</span>
-                </div>
-                <span style={{
-                  padding: '4px 10px',
-                  background: getStatusColor(exam.status) + '15',
-                  color: getStatusColor(exam.status),
-                  borderRadius: 6,
-                  fontSize: 12,
-                  fontWeight: 600
-                }}>
-                  {getDaysUntil(exam.date)}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {exam.topics.map((topic, idx) => (
-                  <span key={idx} style={{
-                    padding: '4px 8px',
-                    background: 'var(--bg)',
-                    color: 'var(--text-secondary)',
-                    borderRadius: 4,
-                    fontSize: 11
-                  }}>
-                    {topic}
-                  </span>
-                ))}
-              </div>
-              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>⏱️ {exam.duration} min</span>
-                <span style={{ fontSize: 12, color: 'var(--primary)' }}>Generate Study Plan →</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Study Plan */}
-        {showPlanner && selectedExam && (
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 20,
-            border: '1px solid var(--border-color)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 16 }}>Study Plan: {selectedExam.name}</h3>
-              <button
-                onClick={() => generateStudyPlan(selectedExam)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 8,
-                  border: 'none',
-                  background: 'var(--primary)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600
-                }}
-              >
-                Generate Plan
-              </button>
-            </div>
-
-            {totalTopics > 0 && (
-              <>
-                <div style={{
-                  height: 8,
-                  background: 'var(--bg)',
-                  borderRadius: 4,
-                  marginBottom: 16,
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: progress + '%',
-                    background: progress === 100 ? '#10b981' : 'var(--primary)',
-                    transition: 'width 0.3s ease'
-                  }} />
-                </div>
-                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>
-                  {completedTopics}/{totalTopics} topics completed ({progress}%)
-                </p>
-              </>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {studyPlan.filter(p => p.examId === selectedExam.id).map(plan => (
-                <div
-                  key={plan.id}
-                  onClick={() => toggleTopic(plan.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: 12,
-                    background: plan.completed ? '#10b98115' : 'var(--bg)',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    border: plan.completed ? '1px solid #10b981' : '1px solid var(--border-color)'
-                  }}
-                >
-                  <div style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    border: plan.completed ? 'none' : '2px solid var(--border-color)',
-                    background: plan.completed ? '#10b981' : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: 12
-                  }}>
-                    {plan.completed && '✓'}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, color: plan.completed ? '#10b981' : 'var(--text-primary)', textDecoration: plan.completed ? 'line-through' : 'none' }}>
-                      Day {plan.day}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
-                      {plan.topics.join(', ')}
-                    </div>
-                  </div>
-                  <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{plan.date}</span>
-                </div>
-              ))}
-            </div>
+      {/* Add Form */}
+      {showAdd && (
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Add Upcoming Exam</h3>
+          <select
+            value={newExam.subject}
+            onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
+            style={styles.select}
+          >
+            <option value="">Select subject</option>
+            {courseOptions.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+          </select>
+          <input
+            type="date"
+            value={newExam.date}
+            onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
+            style={styles.input}
+          />
+          <select
+            value={newExam.type}
+            onChange={(e) => setNewExam({ ...newExam, type: e.target.value })}
+            style={styles.select}
+          >
+            <option value="exam">Final Exam</option>
+            <option value="midterm">Midterm</option>
+            <option value="quiz">Quiz</option>
+            <option value="test">Test</option>
+          </select>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={addExam} style={styles.primaryButton}>Add</button>
+            <button onClick={() => setShowAdd(false)} style={styles.cancelButton}>Cancel</button>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Exam List */}
+      {exams.length === 0 ? (
+        <div style={styles.emptyState}>
+          <p>No exams scheduled.</p>
+          <p>Add your upcoming exams to plan your preparation!</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {exams.sort((a, b) => new Date(a.date) - new Date(b.date)).map(exam => {
+            const days = getDaysUntil(exam.date);
+            return (
+              <div key={exam.id} style={{ ...styles.examCard, borderLeftColor: getUrgencyColor(days) }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3 style={styles.examSubject}>{exam.subject}</h3>
+                    <p style={styles.examDate}>
+                      {new Date(exam.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ ...styles.daysBadge, background: `${getUrgencyColor(days)}20`, color: getUrgencyColor(days) }}>
+                      {days <= 0 ? 'Today!' : days === 1 ? 'Tomorrow' : `${days} days`}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                  <button style={styles.actionButton}>📚 Study Plan</button>
+                  <button style={styles.actionButton}>📝 Practice</button>
+                  <button onClick={() => deleteExam(exam.id)} style={styles.deleteButton}>🗑️</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Prep Tips */}
+      <div style={styles.tipsCard}>
+        <h3 style={styles.tipsTitle}>📋 Exam Preparation Tips</h3>
+        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)', lineHeight: '1.8' }}>
+          <li>Start preparing at least 2 weeks before the exam</li>
+          <li>Create a study schedule and stick to it</li>
+          <li>Practice with past exams if available</li>
+          <li>Take breaks to avoid burnout</li>
+          <li>Review the night before, but get enough sleep</li>
+        </ul>
       </div>
     </div>
   );
 };
+
+const styles = {
+  backButton: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', display: 'flex' },
+  addButton: { display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 16px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  card: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '20px' },
+  cardTitle: { fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: 'var(--text-primary)' },
+  input: { width: '100%', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '12px' },
+  select: { width: '100%', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', background: 'var(--bg-primary)', color: 'var(--text-primary)', marginBottom: '12px' },
+  primaryButton: { background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  cancelButton: { background: 'var(--bg-primary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  emptyState: { textAlign: 'center', padding: '60px 20px', color: 'var(--text-tertiary)' },
+  examCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', borderLeft: '4px solid' },
+  examSubject: { fontSize: '18px', fontWeight: '600', margin: 0, color: 'var(--text-primary)' },
+  examDate: { fontSize: '14px', color: 'var(--text-tertiary)', margin: '4px 0 0 0' },
+  daysBadge: { padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '13px', fontWeight: '600' },
+  actionButton: { padding: '8px 16px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '13px', cursor: 'pointer', color: 'var(--text-secondary)' },
+  deleteButton: { padding: '8px 12px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '13px', cursor: 'pointer' },
+  tipsCard: { marginTop: '24px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px' },
+  tipsTitle: { fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: 'var(--text-primary)' }
+};
+
+window.ExamPrep = ExamPrep;

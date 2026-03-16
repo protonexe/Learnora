@@ -1,25 +1,57 @@
-const TutoringScheduler = ({ onClose }) => {
-  const slots = [
-    { time: '9:00 AM', available: true },
-    { time: '11:00 AM', available: false },
-    { time: '2:00 PM', available: true },
-  ];
+const TutoringScheduler = ({ onBack, showToast }) => {
+  const isMobile = window.innerWidth <= 768;
+  const [sessions] = React.useState([
+    { id: 1, tutor: 'Dr. Smith', subject: 'Mathematics', date: 'Mar 20', time: '3:00 PM', status: 'upcoming' },
+    { id: 2, tutor: 'Prof. Johnson', subject: 'Physics', date: 'Mar 22', time: '2:00 PM', status: 'upcoming' },
+  ]);
+
+  const bookSession = () => {
+    showToast?.('Session requested!', 'success');
+  };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-primary)', zIndex: 1000, overflow: 'auto' }}>
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>← Back</button>
-        <h2 style={{ margin: 0, fontSize: 20 }}>📅 Tutoring</h2>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.backButton}><Icon name="arrow-left" size={20} /></button>
+        <h1 style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: '700', margin: 0 }}>👨‍🏫 Tutoring</h1>
       </div>
-      <div style={{ padding: 20 }}>
-        <h3 style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--text-secondary)' }}>Available Slots</h3>
-        {slots.map((s, i) => (
-          <div key={i} style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, marginBottom: 8, border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{s.time}</span>
-            <button disabled={!s.available} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: s.available ? 'var(--primary)' : 'var(--border-color)', color: 'white', cursor: s.available ? 'pointer' : 'not-allowed', fontSize: 12 }}>{s.available ? 'Book' : 'Booked'}</button>
+
+      <h3 style={styles.sectionTitle}>Upcoming Sessions</h3>
+      {sessions.map(session => (
+        <div key={session.id} style={styles.sessionCard}>
+          <span style={styles.tutorAvatar}>👨‍🏫</span>
+          <div style={styles.sessionInfo}>
+            <h3 style={styles.sessionTutor}>{session.tutor}</h3>
+            <p style={styles.sessionSubject}>{session.subject}</p>
           </div>
+          <div style={styles.sessionTime}>
+            <span>{session.date}</span>
+            <span>{session.time}</span>
+          </div>
+        </div>
+      ))}
+
+      <h3 style={{ ...styles.sectionTitle, marginTop: '24px' }}>Available Tutors</h3>
+      <div style={styles.tutorList}>
+        {['Dr. Smith - Math', 'Prof. Johnson - Physics', 'Ms. Williams - Chemistry'].map((t, i) => (
+          <button key={i} onClick={bookSession} style={styles.tutorBtn}>{t}</button>
         ))}
       </div>
     </div>
   );
 };
+
+const styles = {
+  backButton: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', display: 'flex' },
+  sectionTitle: { fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: 'var(--text-secondary)' },
+  sessionCard: { display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '12px' },
+  tutorAvatar: { fontSize: '40px' },
+  sessionInfo: { flex: 1 },
+  sessionTutor: { fontSize: '16px', fontWeight: '600', margin: 0, color: 'var(--text-primary)' },
+  sessionSubject: { fontSize: '13px', color: 'var(--text-tertiary)', margin: '4px 0 0 0' },
+  sessionTime: { textAlign: 'right', fontSize: '13px', color: 'var(--text-secondary)' },
+  tutorList: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  tutorBtn: { padding: '16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', textAlign: 'left', cursor: 'pointer', fontSize: '14px' }
+};
+
+window.TutoringScheduler = TutoringScheduler;

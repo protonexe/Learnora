@@ -1,21 +1,76 @@
-const DataBackup = ({ onClose }) => {
+const DataBackup = ({ onBack, showToast }) => {
+  const isMobile = window.innerWidth <= 768;
+  const [lastBackup, setLastBackup] = React.useState(localStorage.getItem('last-backup'));
+
+  const exportData = () => {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      data[key] = localStorage.getItem(key);
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `learnora-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    localStorage.setItem('last-backup', new Date().toISOString());
+    setLastBackup(new Date().toISOString());
+    showToast?.('Backup exported!', 'success');
+  };
+
+  const importData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        Object.entries(data).forEach(([key, value]) => localStorage.setItem(key, value));
+        showToast?.('Data imported! Reloading...', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (err) {
+        showToast?.('Invalid backup file', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-primary)', zIndex: 1000, overflow: 'auto' }}>
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>← Back</button>
-        <h2 style={{ margin: 0, fontSize: 20 }}>💾 Backup</h2>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.backButton}><Icon name="arrow-left" size={20} /></button>
+        <h1 style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: '700', margin: 0 }}>💾 Data Backup</h1>
       </div>
-      <div style={{ padding: 20 }}>
-        <div style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid var(--border-color)' }}>
-          <h3 style={{ margin: '0 0 12px 0', fontSize: 16 }}>Export Data</h3>
-          <p style={{ margin: '0 0 16px 0', fontSize: 13, color: 'var(--text-secondary)' }}>Download all your data as a ZIP file</p>
-          <button style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>Export Now</button>
-        </div>
-        <div style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 20, border: '1px solid var(--border-color)' }}>
-          <h3 style={{ margin: '0 0 12px 0', fontSize: 16 }}>Last Backup</h3>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>March 15, 2026 at 2:30 PM</p>
-        </div>
+
+      <div style={styles.card}>
+        <h3 style={styles.title}>📤 Export Data</h3>
+        <p style={styles.desc}>Download all your data including notes, progress, settings, and more.</p>
+        <button onClick={exportData} style={styles.button}>Download Backup</button>
+        {lastBackup && <p style={styles.lastBackup}>Last backup: {new Date(lastBackup).toLocaleString()}</p>}
+      </div>
+
+      <div style={styles.card}>
+        <h3 style={styles.title}>📥 Import Data</h3>
+        <p style={styles.desc}>Restore from a previous backup file. This will replace all current data.</p>
+        <label style={styles.uploadLabel}>
+          <input type="file" accept=".json" onChange={importData} style={{ display: 'none' }} />
+          <span style={styles.uploadButton}>Choose File</span>
+        </label>
       </div>
     </div>
   );
 };
+
+const styles = {
+  backButton: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', display: 'flex' },
+  card: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '24px', marginBottom: '20px' },
+  title: { fontSize: '18px', fontWeight: '600', margin: '0 0 12px 0', color: 'var(--text-primary)' },
+  desc: { fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 16px 0', lineHeight: '1.5' },
+  button: { width: '100%', padding: '14px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  lastBackup: { fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '12px', textAlign: 'center' },
+  uploadLabel: { cursor: 'pointer', display: 'block' },
+  uploadButton: { display: 'block', width: '100%', padding: '14px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '600', textAlign: 'center', color: 'var(--text-primary)' }
+};
+
+window.DataBackup = DataBackup;

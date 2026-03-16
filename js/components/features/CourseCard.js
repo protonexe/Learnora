@@ -1,30 +1,40 @@
-const CourseCard = ({ onClose }) => {
+const CourseCard = ({ onBack }) => {
   const courses = [
-    { name: 'Mathematics', progress: 75, chapters: 12, color: '#f43f5e' },
-    { name: 'Physics', progress: 60, chapters: 10, color: '#14b8a6' },
-    { name: 'Chemistry', progress: 45, chapters: 8, color: '#0ea5e9' },
+    { id: 1, name: 'Mathematics', icon: '📐', progress: 75, color: '#f43f5e', chapters: 12 },
+    { id: 2, name: 'Physics', icon: '⚛️', progress: 60, color: '#14b8a6', chapters: 10 },
+    { id: 3, name: 'Chemistry', icon: '🧪', progress: 45, color: '#0ea5e9', chapters: 8 },
+    { id: 4, name: 'Biology', icon: '🧬', progress: 80, color: '#10b981', chapters: 15 }
   ];
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-primary)', zIndex: 1000, overflow: 'auto', animation: 'fadeIn 0.2s ease' }}>
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>← Back</button>
-        <h2 style={{ margin: 0, fontSize: 20 }}>📚 My Courses</h2>
-      </div>
-      <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {courses.map((c, i) => (
-          <div key={i} style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, border: '1px solid var(--border-color)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{c.name}</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: c.color }}>{c.progress}%</span>
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>My Courses</h1>
+      </header>
+      <div style={{ padding: '20px' }}>
+        <div style={{ display: 'grid', gap: '15px' }}>
+          {courses.map(course => (
+            <div key={course.id} style={{ background: 'white', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+              <div style={{ background: course.color, padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <span style={{ fontSize: '36px' }}>{course.icon}</span>
+                <div style={{ color: 'white', flex: 1 }}>
+                  <div style={{ fontWeight: '600', fontSize: '18px' }}>{course.name}</div>
+                  <div style={{ opacity: 0.9, fontSize: '13px' }}>{course.chapters} chapters</div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold' }}>{course.progress}%</div>
+              </div>
+              <div style={{ padding: '15px' }}>
+                <div style={{ background: '#f3f4f6', borderRadius: '8px', height: '8px' }}>
+                  <div style={{ width: `${course.progress}%`, height: '100%', background: course.color, borderRadius: '8px' }} />
+                </div>
+              </div>
             </div>
-            <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, marginBottom: 8 }}>
-              <div style={{ height: '100%', width: c.progress + '%', background: c.color }} />
-            </div>
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{c.chapters} chapters</span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
 };
+
+window.CourseCard = CourseCard;

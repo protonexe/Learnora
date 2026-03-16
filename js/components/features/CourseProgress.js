@@ -1,27 +1,31 @@
-const CourseProgress = ({ onClose }) => {
+const CourseProgress = ({ onBack }) => {
+  const isMobile = window.innerWidth <= 768;
+  const courses = [
+    { name: 'Python Basics', progress: 65, lessons: 20, completed: 13 },
+    { name: 'Web Development', progress: 40, lessons: 30, completed: 12 },
+    { name: 'Data Science', progress: 20, lessons: 25, completed: 5 },
+  ];
+
   return (
-    <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'var(--bg-primary)',zIndex:1000,overflow:'auto'}}>
-      <div style={{background:'var(--bg-secondary)',borderBottom:'1px solid var(--border-color)',padding:'16px 20px',display:'flex',alignItems:'center',gap:12}}>
-        <button onClick={onClose} style={{padding:'8px 12px',borderRadius:8,border:'none',background:'var(--bg)',color:'var(--text-primary)',cursor:'pointer'}}>← Back</button>
-        <h2 style={{margin:0,fontSize:20}}>📖 Course Progress</h2>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.back}><Icon name="arrow-left" size={20} /></button>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>📈 Course Progress</h1>
       </div>
-      <div style={{padding:20}}>
-        {[
-          {name:'Mathematics',p:75,c:'#f43f5e'},
-          {name:'Physics',p:60,c:'#14b8a6'},
-          {name:'Chemistry',p:45,c:'#0ea5e9'},
-        ].map((c,i)=>(
-          <div key={i} style={{marginBottom:20}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-              <span style={{fontSize:14,fontWeight:600,color:'var(--text-primary)'}}>{c.name}</span>
-              <span style={{fontSize:14,fontWeight:700,color:c.c}}>{c.p}%</span>
-            </div>
-            <div style={{height:10,background:'var(--bg)',borderRadius:5}}>
-              <div style={{height:'100%',width:c.p+'%',background:c.c,borderRadius:5}}/>
-            </div>
+      {courses.map((c, i) => (
+        <div key={i} style={styles.card}>
+          <div style={styles.header}>
+            <h3 style={styles.name}>{c.name}</h3>
+            <span style={styles.percent}>{c.progress}%</span>
           </div>
-        ))}
-      </div>
+          <div style={styles.progress}><div style={{ ...styles.bar, width: c.progress + '%' }} /></div>
+          <p style={styles.lessons}>{c.completed}/{c.lessons} lessons completed</p>
+        </div>
+      ))}
     </div>
   );
 };
+
+const styles = { back: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '8px', cursor: 'pointer' }, card: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }, header: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }, name: { fontSize: '16px', fontWeight: 600, margin: 0 }, percent: { fontSize: '16px', fontWeight: 700, color: 'var(--primary-500)' }, progress: { height: '8px', background: 'var(--bg-primary)', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }, bar: { height: '100%', background: 'var(--primary-500)', borderRadius: '4px' }, lessons: { fontSize: '13px', color: '#888', margin: 0 }};
+
+window.CourseProgress = CourseProgress;

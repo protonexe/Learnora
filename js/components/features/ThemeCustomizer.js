@@ -1,30 +1,53 @@
-const ThemeCustomizer = ({ onClose }) => {
+const ThemeCustomizer = ({ onBack, showToast }) => {
+  const isMobile = window.innerWidth <= 768;
+  const [theme, setTheme] = React.useState(localStorage.getItem('learnora-theme') || 'light');
+
+  const setThemeMode = (mode) => {
+    setTheme(mode);
+    localStorage.setItem('learnora-theme', mode);
+    document.documentElement.setAttribute('data-theme', mode);
+    showToast?.(`Theme set to ${mode}!`, 'success');
+  };
+
   const themes = [
-    { name: 'Default', color: '#6366f1' },
-    { name: 'Ocean', color: '#0ea5e9' },
-    { name: 'Forest', color: '#10b981' },
-    { name: 'Sunset', color: '#f59e0b' },
-    { name: 'Rose', color: '#f43f5e' },
-    { name: 'Purple', color: '#8b5cf6' },
+    { id: 'light', name: 'Light', icon: '☀️', preview: '#ffffff' },
+    { id: 'dark', name: 'Dark', icon: '🌙', preview: '#1a1a2e' },
+    { id: 'blue', name: 'Ocean', icon: '🌊', preview: '#0ea5e9' },
+    { id: 'green', name: 'Forest', icon: '🌲', preview: '#10b981' },
+    { id: 'purple', name: 'Lavender', icon: '💜', preview: '#8b5cf6' },
+    { id: 'rose', name: 'Rose', icon: '🌹', preview: '#f43f5e' },
   ];
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-primary)', zIndex: 1000, overflow: 'auto' }}>
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>← Back</button>
-        <h2 style={{ margin: 0, fontSize: 20 }}>🎨 Theme</h2>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.backButton}><Icon name="arrow-left" size={20} /></button>
+        <h1 style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: '700', margin: 0 }}>🎨 Theme</h1>
       </div>
-      <div style={{ padding: 20 }}>
-        <h3 style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--text-secondary)' }}>Accent Color</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-          {themes.map((t, i) => (
-            <div key={i} style={{ textAlign: 'center', padding: 16, background: 'var(--bg-secondary)', borderRadius: 12, border: '2px solid transparent', cursor: 'pointer' }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: t.color, margin: '0 auto 8px' }} />
-              <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{t.name}</span>
-            </div>
+
+      <div style={styles.card}>
+        <h3 style={styles.title}>Choose Theme</h3>
+        <div style={styles.grid}>
+          {themes.map(t => (
+            <button key={t.id} onClick={() => setThemeMode(t.id)} style={{ ...styles.themeBtn, borderColor: theme === t.id ? 'var(--primary-500)' : 'var(--border-color)' }}>
+              <span style={{ ...styles.preview, background: t.preview }}>{t.icon}</span>
+              <span style={styles.themeName}>{t.name}</span>
+            </button>
           ))}
         </div>
       </div>
     </div>
   );
 };
+
+const styles = {
+  backButton: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', display: 'flex' },
+  card: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '24px', marginBottom: '20px' },
+  title: { fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0', color: 'var(--text-primary)' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' },
+  themeBtn: { padding: '16px', background: 'var(--bg-primary)', border: '2px solid', borderRadius: 'var(--radius-lg)', cursor: 'pointer', textAlign: 'center' },
+  preview: { display: 'block', width: '48px', height: '48px', borderRadius: '50%', margin: '0 auto 8px', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  themeName: { fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }
+};
+
+window.ThemeCustomizer = ThemeCustomizer;

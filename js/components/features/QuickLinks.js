@@ -1,23 +1,31 @@
-const QuickLinks = ({ onClose }) => {
+const QuickLinks = ({ onBack }) => {
   const links = [
-    {name:'Dashboard',icon:'🏠'},
-    {name:'Courses',icon:'📚'},
-    {name:'Settings',icon:'⚙️'},
+    { name: 'Dashboard', view: 'dashboard', icon: '🏠' },
+    { name: 'Courses', view: 'courses', icon: '📚' },
+    { name: 'Quizzes', view: 'quizzes', icon: '📝' },
+    { name: 'Flashcards', view: 'flashcards', icon: '🃏' },
+    { name: 'Analytics', view: 'analytics', icon: '📊' },
+    { name: 'Settings', view: 'settings', icon: '⚙️' }
   ];
 
   return (
-    <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'var(--bg-primary)',zIndex:1000,overflow:'auto'}}>
-      <div style={{background:'var(--bg-secondary)',borderBottom:'1px solid var(--border-color)',padding:'16px 20px'}}>
-        <button onClick={onClose} style={{padding:'8px 12px',borderRadius:8,border:'none',background:'var(--bg)',color:'var(--text-primary)',cursor:'pointer'}}>← Back</button>
-      </div>
-      <div style={{padding:20}}>
-        {links.map((l,i)=>(
-          <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:16,background:'var(--bg-secondary)',borderRadius:12,marginBottom:8,border:'1px solid var(--border-color)'}}>
-            <span style={{fontSize:20}}>{l.icon}</span>
-            <span style={{fontSize:14,fontWeight:600}}>{l.name}</span>
-          </div>
-        ))}
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>Quick Links</h1>
+      </header>
+      <div style={{ padding: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+          {links.map((l, i) => (
+            <div key={i} style={{ background: 'white', padding: '25px', borderRadius: '15px', textAlign: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+              <div style={{ fontSize: '36px', marginBottom: '10px' }}>{l.icon}</div>
+              <div style={{ fontWeight: '600', color: '#1f2937' }}>{l.name}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
+
+window.QuickLinks = QuickLinks;

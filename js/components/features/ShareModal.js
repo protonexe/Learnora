@@ -1,25 +1,29 @@
-const ShareModal = ({ onClose }) => {
-  const options = [
-    { icon: '📱', label: 'Messages', color: '#10b981' },
-    { icon: '📧', label: 'Email', color: '#0ea5e9' },
-    { icon: '🔗', label: 'Copy Link', color: '#8b5cf6' },
-    { icon: '🐦', label: 'Twitter', color: '#1da1f2' },
-  ];
+const ShareModal = ({ onBack, showToast }) => {
+  const isMobile = window.innerWidth <= 768;
+  
+  const share = (platform) => {
+    showToast?.(`Opening ${platform}...`, 'info');
+  };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: 'var(--bg-secondary)', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 400, animation: 'slideUp 0.3s ease' }}>
-        <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', fontSize: 18 }}>Share</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-          {options.map((o, i) => (
-            <div key={i} style={{ textAlign: 'center', cursor: 'pointer' }}>
-              <div style={{ width: 50, height: 50, borderRadius: 12, background: o.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, margin: '0 auto 8px' }}>{o.icon}</div>
-              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{o.label}</span>
-            </div>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.back}><Icon name="arrow-left" size={20} /></button>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>📤 Share</h1>
+      </div>
+
+      <div style={styles.card}>
+        <p style={styles.text}>Share your progress with friends!</p>
+        <div style={styles.grid}>
+          {['Twitter', 'Facebook', 'LinkedIn', 'Email', 'WhatsApp', 'Copy Link'].map(p => (
+            <button key={p} onClick={() => share(p)} style={styles.btn}>{p}</button>
           ))}
         </div>
-        <button onClick={onClose} style={{ width: '100%', marginTop: 20, padding: 14, borderRadius: 12, border: 'none', background: 'var(--bg)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
       </div>
     </div>
   );
 };
+
+const styles = { back: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '8px', cursor: 'pointer' }, card: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }, text: { textAlign: 'center', marginBottom: '20px', color: '#666' }, grid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }, btn: { padding: '16px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }};
+
+window.ShareModal = ShareModal;

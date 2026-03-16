@@ -1,21 +1,36 @@
-const PaymentHistory = ({ onClose }) => {
+const PaymentHistory = ({ onBack }) => {
+  const isMobile = window.innerWidth <= 768;
+  const payments = [
+    { id: 1, date: 'Mar 1, 2026', amount: '$9.99', status: 'Completed', item: 'Pro Subscription' },
+    { id: 2, date: 'Feb 1, 2026', amount: '$9.99', status: 'Completed', item: 'Pro Subscription' },
+    { id: 3, date: 'Jan 1, 2026', amount: '$9.99', status: 'Completed', item: 'Pro Subscription' },
+  ];
+
   return (
-    <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'var(--bg-primary)',zIndex:1000,overflow:'auto'}}>
-      <div style={{background:'var(--bg-secondary)',borderBottom:'1px solid var(--border-color)',padding:'16px 20px',display:'flex',alignItems:'center',gap:12}}>
-        <button onClick={onClose} style={{padding:'8px 12px',borderRadius:8,border:'none',background:'var(--bg)',color:'var(--text-primary)',cursor:'pointer'}}>← Back</button>
-        <h2 style={{margin:0,fontSize:20}}>💳 Payment History</h2>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.back}><Icon name="arrow-left" size={20} /></button>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>💳 Payment History</h1>
       </div>
-      <div style={{padding:20}}>
-        {[
-          {date:'March 15, 2026',amount:'$9.99',status:'Completed'},
-          {date:'Feb 15, 2026',amount:'$9.99',status:'Completed'},
-        ].map((p,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:16,background:'var(--bg-secondary)',borderRadius:12,marginBottom:8,border:'1px solid var(--border-color)'}}>
-            <div><div style={{fontSize:14,fontWeight:600,color:'var(--text-primary)'}}>{p.date}</div><div style={{fontSize:12,color:'var(--text-secondary)'}}>{p.amount}</div></div>
-            <span style={{padding:'4px 12px',background:'#10b98115',color:'#10b981',borderRadius:6,fontSize:12,fontWeight:600}}>{p.status}</span>
+
+      <div style={styles.list}>
+        {payments.map(p => (
+          <div key={p.id} style={styles.item}>
+            <div>
+              <h3 style={styles.itemName}>{p.item}</h3>
+              <p style={styles.itemDate}>{p.date}</p>
+            </div>
+            <div style={styles.right}>
+              <span style={styles.amount}>{p.amount}</span>
+              <span style={styles.status}>{p.status}</span>
+            </div>
           </div>
         ))}
       </div>
     </div>
   );
 };
+
+const styles = { back: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '8px', cursor: 'pointer' }, list: { display: 'flex', flexDirection: 'column', gap: '12px' }, item: { display: 'flex', justifyContent: 'space-between', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }, itemName: { margin: 0, fontSize: '15px', fontWeight: 600 }, itemDate: { margin: '4px 0 0', fontSize: '13px', color: '#888' }, right: { textAlign: 'right' }, amount: { display: 'block', fontSize: '16px', fontWeight: 700, color: 'var(--primary-500)' }, status: { display: 'block', fontSize: '12px', color: '#10b981', marginTop: '4px' }};
+
+window.PaymentHistory = PaymentHistory;

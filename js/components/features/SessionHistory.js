@@ -1,260 +1,131 @@
-const SessionHistory = ({ onClose }) => {
+const SessionHistory = ({ onBack, showToast }) => {
+  const isMobile = window.innerWidth <= 768;
   const [sessions, setSessions] = React.useState(() => {
-    const saved = localStorage.getItem('learnora-session-history');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, date: '2026-03-15', duration: 45, subject: 'Mathematics', type: 'study', completed: true },
-      { id: 2, date: '2026-03-15', duration: 30, subject: 'Physics', type: 'quiz', score: 85, completed: true },
-      { id: 3, date: '2026-03-14', duration: 60, subject: 'Chemistry', type: 'study', completed: true },
-      { id: 4, date: '2026-03-14', duration: 20, subject: 'History', type: 'flashcards', completed: true },
-      { id: 5, date: '2026-03-13', duration: 90, subject: 'Mathematics', type: 'study', completed: false },
-    ];
+    return JSON.parse(localStorage.getItem('study-sessions') || '[]');
   });
+
   const [filter, setFilter] = React.useState('all');
-  const [sortBy, setSortBy] = React.useState('date');
 
-  const subjects = ['all', ...new Set(sessions.map(s => s.subject))];
-  const types = [
-    { value: 'all', label: 'All Types', icon: '📚' },
-    { value: 'study', label: 'Study', icon: '📖' },
-    { value: 'quiz', label: 'Quiz', icon: '✍️' },
-    { value: 'flashcards', label: 'Flashcards', icon: '🃏' },
-  ];
+  const filteredSessions = filter === 'all' 
+    ? sessions 
+    : sessions.filter(s => s.subject === filter);
 
-  const filteredSessions = sessions
-    .filter(s => filter === 'all' || s.subject === filter)
-    .sort((a, b) => {
-      if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
-      if (sortBy === 'duration') return b.duration - a.duration;
-      return 0;
-    });
+  const subjects = [...new Set(sessions.map(s => s.subject).filter(Boolean))];
 
-  const totalTime = filteredSessions.reduce((acc, s) => acc + s.duration, 0);
-  const completedCount = filteredSessions.filter(s => s.completed).length;
-
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) return 'Today';
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const deleteSession = (id) => {
+    setSessions(sessions.filter(s => s.id !== id));
   };
 
-  const getTypeIcon = (type) => {
-    const t = types.find(ty => ty.value === type);
-    return t?.icon || '📚';
+  const formatDuration = (minutes) => {
+    if (!minutes) return '0 min';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m} min`;
   };
-
-  const groupByDate = (sessions) => {
-    const groups = {};
-    sessions.forEach(session => {
-      const date = formatDate(session.date);
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(session);
-    });
-    return groups;
-  };
-
-  const groupedSessions = groupByDate(filteredSessions);
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'var(--bg-primary)',
-      zIndex: 1000,
-      overflow: 'auto',
-      animation: 'fadeIn 0.2s ease'
-    }}>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={onClose} style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            cursor: 'pointer'
-          }}>
-            ← Back
-          </button>
-          <h2 style={{ margin: 0, fontSize: 20, color: 'white' }}>📜 Session History</h2>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.backButton}>
+          <Icon name="arrow-left" size={20} />
+        </button>
+        <h1 style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: '700', margin: 0 }}>
+          🕐 Session History
+        </h1>
       </div>
 
-      <div style={{ padding: 20, maxWidth: 700, margin: '0 auto' }}>
-        {/* Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 12,
-          marginBottom: 24
-        }}>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 16,
-            border: '1px solid var(--border-color)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--primary)' }}>{filteredSessions.length}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Sessions</div>
-          </div>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 16,
-            border: '1px solid var(--border-color)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: '#10b981' }}>{Math.round(totalTime / 60)}h</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Total Time</div>
-          </div>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 16,
-            border: '1px solid var(--border-color)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: '#8b5cf6' }}>{completedCount}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Completed</div>
-          </div>
-        </div>
+      {/* Filter */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => setFilter('all')}
+          style={{ ...styles.filterButton, background: filter === 'all' ? 'var(--primary-500)' : 'var(--bg-secondary)', color: filter === 'all' ? '#fff' : 'var(--text-secondary)' }}
+        >
+          All
+        </button>
+        {subjects.map(s => (
+          <button
+            key={s}
+            onClick={() => setFilter(s)}
+            style={{ ...styles.filterButton, background: filter === s ? 'var(--primary-500)' : 'var(--bg-secondary)', color: filter === s ? '#fff' : 'var(--text-secondary)' }}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
 
-        {/* Filters */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 8 }}>
-          {subjects.map(subject => (
-            <button
-              key={subject}
-              onClick={() => setFilter(subject)}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 20,
-                border: 'none',
-                background: filter === subject ? 'var(--primary)' : 'var(--bg-secondary)',
-                color: filter === subject ? 'white' : 'var(--text-primary)',
-                cursor: 'pointer',
-                fontSize: 12,
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {subject === 'all' ? 'All Subjects' : subject}
-            </button>
+      {/* Sessions List */}
+      {filteredSessions.length === 0 ? (
+        <div style={styles.emptyState}>
+          <p>No study sessions recorded yet.</p>
+          <p>Start a timer to track your study time!</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {filteredSessions.sort((a, b) => new Date(b.date) - new Date(a.date)).map(session => (
+            <div key={session.id} style={styles.sessionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={styles.sessionIcon}>
+                  {session.subject?.charAt(0) || '📚'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={styles.sessionSubject}>{session.subject || 'Study Session'}</h3>
+                  <p style={styles.sessionDate}>
+                    {new Date(session.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={styles.sessionDuration}>{formatDuration(session.duration)}</span>
+                </div>
+                <button onClick={() => deleteSession(session.id)} style={styles.deleteButton}>×</button>
+              </div>
+              {session.notes && (
+                <p style={styles.sessionNotes}>{session.notes}</p>
+              )}
+            </div>
           ))}
         </div>
+      )}
 
-        {/* Sort */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-secondary)', alignSelf: 'center' }}>Sort:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: 8,
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-secondary)',
-              color: 'var(--text-primary)',
-              fontSize: 12,
-              cursor: 'pointer'
-            }}
-          >
-            <option value="date">By Date</option>
-            <option value="duration">By Duration</option>
-          </select>
-        </div>
-
-        {/* Sessions List */}
-        {Object.entries(groupedSessions).map(([date, dateSessions]) => (
-          <div key={date} style={{ marginBottom: 20 }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: 13, color: 'var(--text-secondary)' }}>{date}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {dateSessions.map(session => (
-                <div
-                  key={session.id}
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    borderRadius: 10,
-                    padding: 14,
-                    border: '1px solid var(--border-color)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12
-                  }}
-                >
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
-                    background: 'var(--primary)' + '15',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 18
-                  }}>
-                    {getTypeIcon(session.type)}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {session.subject}
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                      {session.duration} min • {session.type.charAt(0).toUpperCase() + session.type.slice(1)}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    {session.score ? (
-                      <span style={{
-                        padding: '4px 10px',
-                        background: session.score >= 70 ? '#10b98115' : '#f43f5e15',
-                        color: session.score >= 70 ? '#10b981' : '#f43f5e',
-                        borderRadius: 6,
-                        fontSize: 12,
-                        fontWeight: 600
-                      }}>
-                        {session.score}%
-                      </span>
-                    ) : (
-                      <span style={{
-                        padding: '4px 10px',
-                        background: session.completed ? '#10b98115' : '#f59e0b15',
-                        color: session.completed ? '#10b981' : '#f59e0b',
-                        borderRadius: 6,
-                        fontSize: 11
-                      }}>
-                        {session.completed ? '✓ Completed' : '✗ Incomplete'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+      {/* Summary */}
+      {sessions.length > 0 && (
+        <div style={styles.summaryCard}>
+          <h3 style={styles.summaryTitle}>Summary</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+            <div>
+              <span style={styles.summaryValue}>{sessions.length}</span>
+              <span style={styles.summaryLabel}>Total Sessions</span>
+            </div>
+            <div>
+              <span style={styles.summaryValue}>{Math.round(sessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60)}h</span>
+              <span style={styles.summaryLabel}>Total Time</span>
+            </div>
+            <div>
+              <span style={styles.summaryValue}>{subjects.length}</span>
+              <span style={styles.summaryLabel}>Subjects</span>
             </div>
           </div>
-        ))}
-
-        {filteredSessions.length === 0 && (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
-            <p>No sessions found</p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
+
+const styles = {
+  backButton: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '8px', cursor: 'pointer', display: 'flex' },
+  filterButton: { padding: '8px 16px', borderRadius: 'var(--radius-md)', border: 'none', fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  emptyState: { textAlign: 'center', padding: '60px 20px', color: 'var(--text-tertiary)' },
+  sessionCard: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '16px' },
+  sessionIcon: { width: '48px', height: '48px', background: 'var(--primary-100)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', color: 'var(--primary-600)', fontWeight: '600' },
+  sessionSubject: { fontSize: '16px', fontWeight: '600', margin: 0, color: 'var(--text-primary)' },
+  sessionDate: { fontSize: '13px', color: 'var(--text-tertiary)', margin: '4px 0 0 0' },
+  sessionDuration: { fontSize: '16px', fontWeight: '700', color: 'var(--primary-500)' },
+  sessionNotes: { fontSize: '14px', color: 'var(--text-secondary)', margin: '12px 0 0 0', paddingTop: '12px', borderTop: '1px solid var(--border-color)' },
+  deleteButton: { background: 'transparent', border: 'none', fontSize: '20px', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '0 8px' },
+  summaryCard: { marginTop: '24px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px' },
+  summaryTitle: { fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: 'var(--text-primary)' },
+  summaryValue: { display: 'block', fontSize: '24px', fontWeight: '700', color: 'var(--primary-500)' },
+  summaryLabel: { fontSize: '12px', color: 'var(--text-tertiary)' }
+};
+
+window.SessionHistory = SessionHistory;

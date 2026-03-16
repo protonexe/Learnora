@@ -1,272 +1,99 @@
-import React from 'react';
-import { StickyNote, Plus, Trash2, Edit2, Save, X, Search } from './Icon';
-
-const QuickNotes = ({ onClose }) => {
-  const [notes, setNotes] = React.useState(() => {
-    return JSON.parse(localStorage.getItem('learnora-quick-notes') || '[]');
-  });
+const QuickNotes = ({ onBack, showToast }) => {
+  const [notes, setNotes] = React.useState(() => JSON.parse(localStorage.getItem('quick-notes')) || []);
   const [newNote, setNewNote] = React.useState('');
-  const [editingId, setEditingId] = React.useState(null);
-  const [editText, setEditText] = React.useState('');
-  const [search, setSearch] = React.useState('');
-  
-  React.useEffect(() => {
-    localStorage.setItem('learnora-quick-notes', JSON.stringify(notes));
-  }, [notes]);
-  
+  const [filter, setFilter] = React.useState('all');
+
   const addNote = () => {
     if (!newNote.trim()) return;
-    const note = {
-      id: Date.now(),
-      text: newNote,
-      createdAt: new Date().toISOString(),
-      color: ['#fef3c7', '#dbeafe', '#d1fae5', '#fce7f3', '#ede9fe'][Math.floor(Math.random() * 5)]
-    };
-    setNotes([note, ...notes]);
+    const note = { id: Date.now(), text: newNote, pinned: false, createdAt: new Date().toISOString() };
+    const updated = [note, ...notes];
+    setNotes(updated);
+    localStorage.setItem('quick-notes', JSON.stringify(updated));
     setNewNote('');
+    showToast?.('Note added!', 'success');
   };
-  
+
+  const togglePin = (id) => {
+    const updated = notes.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n);
+    setNotes(updated);
+    localStorage.setItem('quick-notes', JSON.stringify(updated));
+  };
+
   const deleteNote = (id) => {
-    setNotes(notes.filter(n => n.id !== id));
+    const updated = notes.filter(n => n.id !== id);
+    setNotes(updated);
+    localStorage.setItem('quick-notes', JSON.stringify(updated));
   };
-  
-  const startEdit = (note) => {
-    setEditingId(note.id);
-    setEditText(note.text);
-  };
-  
-  const saveEdit = () => {
-    setNotes(notes.map(n => n.id === editingId ? { ...n, text: editText } : n));
-    setEditingId(null);
-    setEditText('');
-  };
-  
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditText('');
-  };
-  
-  const filteredNotes = notes.filter(n => 
-    n.text.toLowerCase().includes(search.toLowerCase())
-  );
-  
+
+  const filteredNotes = filter === 'pinned' ? notes.filter(n => n.pinned) : notes;
+  const sortedNotes = [...filteredNotes].sort((a, b) => b.pinned - a.pinned);
+
   return (
-    <div style={{
-      background: 'var(--card-bg)',
-      borderRadius: 16,
-      padding: 24,
-      maxWidth: 500,
-      maxHeight: '80vh',
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20
-      }}>
-        <h2 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <StickyNote size={24} /> Quick Notes
-        </h2>
-        <span style={{
-          background: 'var(--primary)',
-          color: 'white',
-          padding: '4px 10px',
-          borderRadius: 12,
-          fontSize: 12
-        }}>
-          {notes.length} notes
-        </span>
-      </div>
-      
-      <div style={{ marginBottom: 16 }}>
-        <div style={{
-          display: 'flex',
-          gap: 8,
-          background: 'var(--bg)',
-          borderRadius: 8,
-          padding: 4,
-          border: '1px solid var(--border-color)'
-        }}>
-          <Search size={18} style={{ color: 'var(--text-secondary)', marginLeft: 8, alignSelf: 'center' }} />
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>Quick Notes</h1>
+      </header>
+
+      <div style={{ padding: '20px' }}>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <input
             type="text"
-            placeholder="Search notes..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              flex: 1,
-              border: 'none',
-              background: 'transparent',
-              padding: '8px 0',
-              color: 'var(--text-primary)',
-              outline: 'none'
-            }}
+            placeholder="Type a quick note..."
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addNote()}
+            style={{ flex: 1, padding: '15px', borderRadius: '12px', border: '2px solid #e5e7eb', fontSize: '16px' }}
           />
+          <button
+            onClick={addNote}
+            style={{ padding: '15px 25px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            Add
+          </button>
         </div>
-      </div>
-      
-      <div style={{
-        display: 'flex',
-        gap: 8,
-        marginBottom: 20
-      }}>
-        <input
-          type="text"
-          placeholder="Write a quick note..."
-          value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && addNote()}
-          style={{
-            flex: 1,
-            padding: 12,
-            borderRadius: 8,
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg)',
-            color: 'var(--text-primary)'
-          }}
-        />
-        <button
-          onClick={addNote}
-          style={{
-            padding: '12px 20px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'var(--primary)',
-            color: 'white',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6
-          }}
-        >
-          <Plus size={18} /> Add
-        </button>
-      </div>
-      
-      <div style={{
-        flex: 1,
-        overflow: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12
-      }}>
-        {filteredNotes.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: 40,
-            color: 'var(--text-secondary)'
-          }}>
-            {search ? 'No notes found' : 'No notes yet. Start writing!'}
-          </div>
-        ) : (
-          filteredNotes.map(note => (
-            <div
-              key={note.id}
-              style={{
-                background: note.color,
-                borderRadius: 8,
-                padding: 12,
-                position: 'relative'
-              }}
+
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          {['all', 'pinned'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{ padding: '8px 16px', border: 'none', borderRadius: '20px', background: filter === f ? '#1f2937' : '#e5e7eb', color: filter === f ? 'white' : '#6b7280', cursor: 'pointer', textTransform: 'capitalize' }}
             >
-              {editingId === note.id ? (
-                <>
-                  <textarea
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    autoFocus
-                    style={{
-                      width: '100%',
-                      minHeight: 60,
-                      border: 'none',
-                      background: 'transparent',
-                      color: '#374151',
-                      resize: 'none',
-                      fontFamily: 'inherit',
-                      outline: 'none'
-                    }}
-                  />
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    <button
-                      onClick={saveEdit}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: 6,
-                        border: 'none',
-                        background: '#10b981',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: 12
-                      }}
-                    >
-                      <Save size={14} /> Save
-                    </button>
-                    <button
-                      onClick={cancelEdit}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: 6,
-                        border: 'none',
-                        background: '#6b7280',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: 12
-                      }}
-                    >
-                      <X size={14} /> Cancel
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p style={{ margin: 0, color: '#374151', lineHeight: 1.5 }}>{note.text}</p>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: 8,
-                    fontSize: 11,
-                    color: '#6b7280'
-                  }}>
-                    <span>{new Date(note.createdAt).toLocaleDateString()}</span>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button
-                        onClick={() => startEdit(note)}
-                        style={{
-                          padding: 4,
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          color: '#6b7280'
-                        }}
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button
-                        onClick={() => deleteNote(note.id)}
-                        style={{
-                          padding: 4,
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          color: '#ef4444'
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          ))
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {sortedNotes.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#9ca3af', padding: '40px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '15px' }}>📝</div>
+            <p>No notes yet</p>
+          </div>
         )}
+
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {sortedNotes.map(note => (
+            <div key={note.id} style={{ background: 'white', padding: '15px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <button
+                onClick={() => togglePin(note.id)}
+                style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', opacity: note.pinned ? 1 : 0.3 }}
+              >
+                📌
+              </button>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: '#1f2937' }}>{note.text}</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '5px' }}>
+                  {new Date(note.createdAt).toLocaleString()}
+                </div>
+              </div>
+              <button onClick={() => deleteNote(note.id)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '18px' }}>×</button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
 
-export default QuickNotes;
+window.QuickNotes = QuickNotes;

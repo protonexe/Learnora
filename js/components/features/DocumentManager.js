@@ -1,23 +1,34 @@
-const DocumentManager = ({ onClose }) => {
+const DocumentManager = ({ onBack }) => {
+  const isMobile = window.innerWidth <= 768;
   const docs = [
-    {name:'Math Notes.pdf',date:'2026-03-15'},
-    {name:'Physics Summary.docx',date:'2026-03-14'},
+    { id: 1, name: 'Math Notes.pdf', size: '2.4 MB', type: 'PDF' },
+    { id: 2, name: 'Physics Cheat Sheet.docx', size: '1.1 MB', type: 'DOC' },
+    { id: 3, name: 'Chemistry Formulas.pdf', size: '890 KB', type: 'PDF' },
   ];
 
   return (
-    <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'var(--bg-primary)',zIndex:1000,overflow:'auto'}}>
-      <div style={{background:'var(--bg-secondary)',borderBottom:'1px solid var(--border-color)',padding:'16px 20px',display:'flex',alignItems:'center',gap:12}}>
-        <button onClick={onClose} style={{padding:'8px 12px',borderRadius:8,border:'none',background:'var(--bg)',color:'var(--text-primary)',cursor:'pointer'}}>← Back</button>
-        <h2 style={{margin:0,fontSize:20}}>📁 Documents</h2>
+    <div style={{ padding: isMobile ? '12px' : '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <button onClick={onBack} style={styles.back}><Icon name="arrow-left" size={20} /></button>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>📁 Document Manager</h1>
       </div>
-      <div style={{padding:20}}>
-        {docs.map((d,i)=>(
-          <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:14,background:'var(--bg-secondary)',borderRadius:12,marginBottom:8,border:'1px solid var(--border-color)'}}>
-            <span style={{fontSize:24}}>📄</span>
-            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600,color:'var(--text-primary)'}}>{d.name}</div><div style={{fontSize:12,color:'var(--text-secondary)'}}>{d.date}</div></div>
+
+      <button style={styles.upload}>+ Upload Document</button>
+
+      {docs.map(d => (
+        <div key={d.id} style={styles.doc}>
+          <span style={styles.icon}>{d.type === 'PDF' ? '📄' : '📝'}</span>
+          <div style={styles.info}>
+            <span style={styles.name}>{d.name}</span>
+            <span style={styles.size}>{d.size}</span>
           </div>
-        ))}
-      </div>
+          <button style={styles.download}>↓</button>
+        </div>
+      ))}
     </div>
   );
 };
+
+const styles = { back: { background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '8px', cursor: 'pointer' }, upload: { width: '100%', padding: '16px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, marginBottom: '16px' }, doc: { display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', marginBottom: '8px' }, icon: { fontSize: '32px' }, info: { flex: 1 }, name: { display: 'block', fontSize: '14px', fontWeight: 500 }, size: { fontSize: '12px', color: '#888' }, download: { padding: '8px 16px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer' }};
+
+window.DocumentManager = DocumentManager;

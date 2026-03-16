@@ -1,326 +1,93 @@
-const StudyChecklist = ({ onClose }) => {
-  const [checklists, setChecklists] = React.useState(() => {
-    const saved = localStorage.getItem('learnora-checklists');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, title: 'Before Exam', items: [
-        { id: 1, text: 'Review all chapters', completed: true },
-        { id: 2, text: 'Complete practice problems', completed: true },
-        { id: 3, text: 'Review notes', completed: false },
-        { id: 4, text: 'Get adequate sleep', completed: false },
-      ]},
-      { id: 2, title: 'Daily Routine', items: [
-        { id: 1, text: 'Morning review (30 min)', completed: true },
-        { id: 2, text: 'Afternoon study session', completed: false },
-        { id: 3, text: 'Evening recap', completed: false },
-      ]},
-    ];
+const StudyChecklist = ({ onBack, showToast }) => {
+  const [checklists, setChecklists] = React.useState(() => JSON.parse(localStorage.getItem('study-checklists')) || {
+    'Before Exam': [
+      { id: 1, text: 'Review all notes', done: true },
+      { id: 2, text: 'Complete practice problems', done: true },
+      { id: 3, text: 'Get adequate sleep', done: false },
+      { id: 4, text: 'Gather supplies', done: false }
+    ],
+    'Daily Routine': [
+      { id: 1, text: 'Morning review (15 min)', done: false },
+      { id: 2, text: 'Pomodoro session 1', done: false },
+      { id: 3, text: 'Pomodoro session 2', done: false },
+      { id: 4, text: 'Evening review (15 min)', done: false }
+    ]
   });
-  const [showAddList, setShowAddList] = React.useState(false);
-  const [showAddItem, setShowAddItem] = React.useState(null);
-  const [newListTitle, setNewListTitle] = React.useState('');
-  const [newItemText, setNewItemText] = React.useState('');
 
-  const saveChecklists = (newChecklists) => {
-    setChecklists(newChecklists);
-    localStorage.setItem('learnora-checklists', JSON.stringify(newChecklists));
-  };
+  const [activeList, setActiveList] = React.useState('Before Exam');
 
-  const toggleItem = (listId, itemId) => {
-    saveChecklists(checklists.map(list => 
-      list.id === listId 
-        ? { ...list, items: list.items.map(item => 
-            item.id === itemId ? { ...item, completed: !item.completed } : item
-          )}
-        : list
-    ));
+  const toggleItem = (listName, id) => {
+    const updated = {
+      ...checklists,
+      [listName]: checklists[listName].map(item => item.id === id ? { ...item, done: !item.done } : item)
+    };
+    setChecklists(updated);
+    localStorage.setItem('study-checklists', JSON.stringify(updated));
   };
 
   const addChecklist = () => {
-    if (!newListTitle) return;
-    saveChecklists([...checklists, {
-      id: Date.now(),
-      title: newListTitle,
-      items: []
-    }]);
-    setNewListTitle('');
-    setShowAddList(false);
+    const name = prompt('Checklist name:');
+    if (name && !checklists[name]) {
+      const updated = { ...checklists, [name]: [] };
+      setChecklists(updated);
+      localStorage.setItem('study-checklists', JSON.stringify(updated));
+      setActiveList(name);
+    }
   };
 
-  const addItem = (listId) => {
-    if (!newItemText) return;
-    saveChecklists(checklists.map(list => 
-      list.id === listId 
-        ? { ...list, items: [...list.items, { id: Date.now(), text: newItemText, completed: false }]}
-        : list
-    ));
-    setNewItemText('');
-    setShowAddItem(null);
+  const addItem = () => {
+    const text = prompt('Item:');
+    if (text) {
+      const updated = { ...checklists, [activeList]: [...checklists[activeList], { id: Date.now(), text, done: false }] };
+      setChecklists(updated);
+      localStorage.setItem('study-checklists', JSON.stringify(updated));
+    }
   };
 
-  const deleteChecklist = (id) => {
-    saveChecklists(checklists.filter(l => l.id !== id));
-  };
-
-  const deleteItem = (listId, itemId) => {
-    saveChecklists(checklists.map(list => 
-      list.id === listId 
-        ? { ...list, items: list.items.filter(item => item.id !== itemId)}
-        : list
-    ));
-  };
-
-  const getProgress = (items) => {
-    if (items.length === 0) return 0;
-    const completed = items.filter(i => i.completed).length;
-    return Math.round((completed / items.length) * 100);
-  };
+  const completed = checklists[activeList]?.filter(i => i.done).length || 0;
+  const total = checklists[activeList]?.length || 0;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'var(--bg-primary)',
-      zIndex: 1000,
-      overflow: 'auto',
-      animation: 'fadeIn 0.2s ease'
-    }}>
-      {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #14b8a6 0%, #10b981 100%)',
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={onClose} style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            cursor: 'pointer'
-          }}>
-            ← Back
-          </button>
-          <h2 style={{ margin: 0, fontSize: 20, color: 'white' }}>✅ Study Checklists</h2>
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>Study Checklist</h1>
+      </header>
+
+      <div style={{ padding: '20px' }}>
+        <div className="tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px', overflowX: 'auto' }}>
+          {Object.keys(checklists).map(name => (
+            <button key={name} onClick={() => setActiveList(name)} style={{ padding: '10px 20px', border: 'none', borderRadius: '25px', background: activeList === name ? '#6366f1' : '#e5e7eb', color: activeList === name ? 'white' : '#6b7280', cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: '600' }}>
+              {name}
+            </button>
+          ))}
+          <button onClick={addChecklist} style={{ padding: '10px 20px', border: '2px dashed #d1d5db', borderRadius: '25px', background: 'transparent', color: '#9ca3af', cursor: 'pointer' }}>+</button>
         </div>
-        <button
-          onClick={() => setShowAddList(true)}
-          style={{
-            padding: '8px 16px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'white',
-            color: '#10b981',
-            cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: 600
-          }}
-        >
-          + New List
-        </button>
-      </div>
 
-      <div style={{ padding: 20, maxWidth: 600, margin: '0 auto' }}>
-        {/* Add List Form */}
-        {showAddList && (
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 20,
-            border: '1px solid var(--border-color)'
-          }}>
-            <input
-              type="text"
-              value={newListTitle}
-              onChange={(e) => setNewListTitle(e.target.value)}
-              placeholder="Checklist title..."
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: 8,
-                border: '1px solid var(--border-color)',
-                background: 'var(--bg)',
-                color: 'var(--text-primary)',
-                fontSize: 14,
-                marginBottom: 12
-              }}
-            />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={addChecklist} style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: 8,
-                border: 'none',
-                background: 'var(--primary)',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: 600
-              }}>
-                Create
-              </button>
-              <button onClick={() => setShowAddList(false)} style={{
-                padding: '10px 16px',
-                borderRadius: 8,
-                border: '1px solid var(--border-color)',
-                background: 'var(--bg)',
-                color: 'var(--text-primary)',
-                cursor: 'pointer'
-              }}>
-                Cancel
-              </button>
-            </div>
+        <div className="progress" style={{ background: '#f3f4f6', padding: '15px', borderRadius: '12px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ flex: 1, background: '#e5e7eb', borderRadius: '8px', height: '10px' }}>
+            <div style={{ width: `${(completed/total)*100 || 0}%`, height: '100%', background: '#10b981', borderRadius: '8px', transition: 'width 0.3s' }} />
           </div>
-        )}
+          <span style={{ fontWeight: '600', color: '#10b981' }}>{completed}/{total}</span>
+        </div>
 
-        {/* Checklists */}
-        {checklists.map(list => {
-          const progress = getProgress(list.items);
-          return (
-            <div
-              key={list.id}
-              style={{
-                background: 'var(--bg-secondary)',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-                border: '1px solid var(--border-color)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h3 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)' }}>{list.title}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{progress}%</span>
-                  <button
-                    onClick={() => deleteChecklist(list.id)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-tertiary)',
-                      cursor: 'pointer',
-                      fontSize: 14
-                    }}
-                  >
-                    🗑️
-                  </button>
-                </div>
+        <button onClick={addItem} style={{ width: '100%', padding: '12px', background: '#1f2937', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', marginBottom: '15px', fontWeight: '600' }}>
+          + Add Item
+        </button>
+
+        <div style={{ display: 'grid', gap: '10px' }}>
+          {checklists[activeList]?.map(item => (
+            <div key={item.id} onClick={() => toggleItem(activeList, item.id)} style={{ background: 'white', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', textDecoration: item.done ? 'line-through' : 'none', opacity: item.done ? 0.6 : 1 }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '6px', border: item.done ? 'none' : '2px solid #d1d5db', background: item.done ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                {item.done && '✓'}
               </div>
-
-              <div style={{ height: 4, background: 'var(--bg)', borderRadius: 2, marginBottom: 12, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: progress + '%', background: progress === 100 ? '#10b981' : 'var(--primary)', transition: 'width 0.3s ease' }} />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {list.items.map(item => (
-                  <div
-                    key={item.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10 }}
-                  >
-                    <button
-                      onClick={() => toggleItem(list.id, item.id)}
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: item.completed ? '50%' : '6px',
-                        border: item.completed ? 'none' : '2px solid var(--border-color)',
-                        background: item.completed ? '#10b981' : 'transparent',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: 12
-                      }}
-                    >
-                      {item.completed && '✓'}
-                    </button>
-                    <span style={{
-                      flex: 1,
-                      fontSize: 14,
-                      color: item.completed ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                      textDecoration: item.completed ? 'line-through' : 'none'
-                    }}>
-                      {item.text}
-                    </span>
-                    <button
-                      onClick={() => deleteItem(list.id, item.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--text-tertiary)',
-                        cursor: 'pointer',
-                        fontSize: 12,
-                        padding: 4
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setShowAddItem(list.id)}
-                style={{
-                  width: '100%',
-                  marginTop: 12,
-                  padding: '8px',
-                  borderRadius: 6,
-                  border: '1px dashed var(--border-color)',
-                  background: 'transparent',
-                  color: 'var(--text-tertiary)',
-                  cursor: 'pointer',
-                  fontSize: 13
-                }}
-              >
-                + Add Item
-              </button>
-
-              {/* Add Item Form */}
-              {showAddItem === list.id && (
-                <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-                  <input
-                    type="text"
-                    value={newItemText}
-                    onChange={(e) => setNewItemText(e.target.value)}
-                    placeholder="Add item..."
-                    style={{
-                      flex: 1,
-                      padding: '8px 12px',
-                      borderRadius: 6,
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg)',
-                      color: 'var(--text-primary)',
-                      fontSize: 13
-                    }}
-                  />
-                  <button
-                    onClick={() => addItem(list.id)}
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: 6,
-                      border: 'none',
-                      background: 'var(--primary)',
-                      color: 'white',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Add
-                  </button>
-                </div>
-              )}
+              <span style={{ color: '#1f2937' }}>{item.text}</span>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
     </div>
   );
 };
+
+window.StudyChecklist = StudyChecklist;

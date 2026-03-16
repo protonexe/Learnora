@@ -1,28 +1,43 @@
-const Leaderboard = ({ onClose }) => {
+const Leaderboard = ({ onBack }) => {
   const users = [
-    { rank: 1, name: 'Alex Chen', xp: 2450, avatar: 'A' },
-    { rank: 2, name: 'Sarah Kim', xp: 2180, avatar: 'S' },
-    { rank: 3, name: 'You', xp: 1580, avatar: 'Y', isUser: true },
+    { rank: 1, name: 'Alex Johnson', xp: 12500, avatar: '👨‍🎓', badge: '🥇' },
+    { rank: 2, name: 'Sarah Chen', xp: 11200, avatar: '👩‍🎓', badge: '🥈' },
+    { rank: 3, name: 'Mike Brown', xp: 10800, avatar: '👨‍🎓', badge: '🥉' },
+    { rank: 4, name: 'Emma Wilson', xp: 9500, avatar: '👩‍🎓', badge: '' },
+    { rank: 5, name: 'You', xp: 4850, avatar: '🧑‍🎓', badge: '', isUser: true },
+    { rank: 6, name: 'David Lee', xp: 4200, avatar: '👨‍🎓', badge: '' },
+    { rank: 7, name: 'Lisa Park', xp: 3800, avatar: '👩‍🎓', badge: '' }
   ];
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-primary)', zIndex: 1000, overflow: 'auto', animation: 'fadeIn 0.2s ease' }}>
-      <div style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={onClose} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer' }}>← Back</button>
-        <h2 style={{ margin: 0, fontSize: 20, color: 'white' }}>🏆 Leaderboard</h2>
-      </div>
-      <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {users.map(u => (
-          <div key={u.rank} style={{ display: 'flex', alignItems: 'center', gap: 12, background: u.isUser ? 'var(--primary)' + '15' : 'var(--bg-secondary)', borderRadius: 12, padding: 14, border: u.isUser ? '1px solid var(--primary)' : '1px solid var(--border-color)' }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: u.rank <= 3 ? '#fbbf24' : 'var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: u.rank <= 3 ? 'white' : 'var(--text-secondary)' }}>{u.rank <= 3 ? ['🥇', '🥈', '🥉'][u.rank - 1] : u.rank}</div>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: u.isUser ? 'var(--primary)' : '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600 }}>{u.avatar}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{u.name} {u.isUser && '(You)'}</div>
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>Leaderboard</h1>
+      </header>
+
+      <div style={{ padding: '20px' }}>
+        <div style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', padding: '25px', borderRadius: '20px', color: 'white', textAlign: 'center', marginBottom: '25px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '10px' }}>🏆</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold' }}>Weekly Challenge</div>
+        </div>
+
+        <div style={{ display: 'grid', gap: '10px' }}>
+          {users.map(user => (
+            <div key={user.rank} style={{ background: user.isUser ? '#f0f9ff' : 'white', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: user.isUser ? '2px solid #6366f1' : 'none' }}>
+              <div style={{ width: '30px', fontWeight: 'bold', color: user.rank <= 3 ? '#f59e0b' : '#6b7280' }}>#{user.rank}</div>
+              <div style={{ fontSize: '28px' }}>{user.avatar}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: '600', color: '#1f2937' }}>{user.name} {user.isUser && '(You)'}</div>
+                <div style={{ fontSize: '12px', color: '#6b7280' }}>{user.xp.toLocaleString()} XP</div>
+              </div>
+              <div style={{ fontSize: '24px' }}>{user.badge}</div>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>{u.xp.toLocaleString()} XP</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
 };
+
+window.Leaderboard = Leaderboard;

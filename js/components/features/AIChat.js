@@ -7,7 +7,7 @@ const AIChat = ({ isOpen, onClose }) => {
   const [currentMessage, setCurrentMessage] = React.useState('');
   const [isTyping, setIsTyping] = React.useState(false);
   const [aiProvider, setAiProvider] = React.useState(() => {
-    return localStorage.getItem('learnora-ai-provider') || 'gamma';
+    return localStorage.getItem('learnora-ai-provider') || 'gemini';
   });
   const messagesEndRef = React.useRef(null);
   const messagesRef = React.useRef([]);
@@ -25,10 +25,10 @@ const AIChat = ({ isOpen, onClose }) => {
   };
   
   // API Keys
-  const GEMINI_API_KEY = "AIzaSyCBvj6U-sZ0CdV2YngvgajKom5fq3UqXq4";
+  const GEMINI_API_KEY = "AIzaSyAQTR2WieTaYAB-fm93IoKaC0qh3ByX1Ec";
+  const OPENROUTER_API_KEY = "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";
+  const DEEPSEEK_MODEL = "deepseek/deepseek-r1-0528:free";
   const GEMINI_MODEL = "gemini-2.5-flash";
-  const NGROK_BASE_URL = "https://retractable-unheedingly-arnetta.ngrok-free.dev";
-  const selectedModel = "google/gemma-3-4b";
 
   // Save AI provider preference
   React.useEffect(() => {
@@ -236,37 +236,6 @@ const AIChat = ({ isOpen, onClose }) => {
     return data.choices[0].message.content;
   };
 
-  const callNgrokAPI = async (messageHistory, userMessage) => {
-    const apiMessages = [
-      {
-        role: "system",
-        content: "You are an expert educational AI tutor for Learnora. You help students with their studies across various subjects including mathematics, science, literature, and more. Provide clear, educational, and helpful responses."
-      },
-      ...messageHistory.map(msg => ({ role: msg.role, content: msg.content })),
-      { role: "user", content: userMessage }
-    ];
-
-    const response = await fetch(`${NGROK_BASE_URL}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: apiMessages,
-        temperature: 0.7,
-        max_tokens: 1000
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Ngrok API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
-  };
-
   const handleSend = React.useCallback(async (message) => {
     if (!message.trim()) return;
     
@@ -286,12 +255,10 @@ const AIChat = ({ isOpen, onClose }) => {
     try {
       let aiResponse;
       
-      if (aiProvider === 'alpha') {
+      if (aiProvider === 'gemini') {
         aiResponse = await callGeminiAPI(messagesRef.current.slice(0, -1), message);
-      } else if (aiProvider === 'gamma') {
-        aiResponse = await callNgrokAPI(messagesRef.current.slice(0, -1), message);
       } else {
-        aiResponse = await callNgrokAPI(messagesRef.current.slice(0, -1), message);
+        aiResponse = await callDeepSeekAPI(messagesRef.current.slice(0, -1), message);
       }
       
       // Process LaTeX in response
@@ -406,36 +373,36 @@ const AIChat = ({ isOpen, onClose }) => {
               borderRadius: 'var(--radius-md)'
             }}>
               <button
-                onClick={() => setAiProvider('alpha')}
+                onClick={() => setAiProvider('gemini')}
                 style={{
                   padding: '6px 12px',
-                  background: aiProvider === 'alpha' ? 'var(--bg-primary)' : 'transparent',
+                  background: aiProvider === 'gemini' ? 'var(--bg-primary)' : 'transparent',
                   border: '2px solid var(--border-strong)',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '13px',
                   fontWeight: 500,
-                  color: aiProvider === 'alpha' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  color: aiProvider === 'gemini' ? 'var(--text-primary)' : 'var(--text-tertiary)',
                   cursor: 'pointer',
                   transition: 'all var(--transition-fast)'
                 }}
               >
-                Alpha
+                Gemini
               </button>
               <button
-                onClick={() => setAiProvider('gamma')}
+                onClick={() => setAiProvider('deepseek')}
                 style={{
                   padding: '6px 12px',
-                  background: aiProvider === 'gamma' ? 'var(--bg-primary)' : 'transparent',
+                  background: aiProvider === 'deepseek' ? 'var(--bg-primary)' : 'transparent',
                   border: '2px solid var(--border-strong)',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '13px',
                   fontWeight: 500,
-                  color: aiProvider === 'gamma' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  color: aiProvider === 'deepseek' ? 'var(--text-primary)' : 'var(--text-tertiary)',
                   cursor: 'pointer',
                   transition: 'all var(--transition-fast)'
                 }}
               >
-                Gamma
+                DeepSeek
               </button>
             </div>
             

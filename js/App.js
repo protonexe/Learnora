@@ -575,6 +575,385 @@ function LearnoraApp() {
             showToast={showToast}
           />
         )}
+
+        {currentView === 'quick-quiz' && window.QuickQuiz && (
+          <QuickQuiz onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'flashcard-review' && window.FlashcardReview && (
+          <FlashcardReview onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'session-summary' && window.SessionSummary && (
+          <SessionSummary onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'weekly-goals' && window.WeeklyGoals && (
+          <WeeklyGoals onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'quiz-results' && window.QuizResults && (
+          <QuizResults onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'subject-card' && window.SubjectCard && (
+          <SubjectCard onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'course-progress' && window.CourseProgress && (
+          <CourseProgress onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'pomodoro-advanced' && window.PomodoroAdvanced && (
+          <PomodoroAdvanced onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'study-planner' && window.StudyPlanner && (
+          <StudyPlanner onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'focus-music' && window.FocusMusic && (
+          <FocusMusic onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'progress-tracker' && window.ProgressTracker && (
+          <ProgressTracker onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'exam-countdown' && window.ExamCountdown && (
+          <ExamCountdown onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'quick-notes' && window.QuickNotes && (
+          <QuickNotes onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'task-master' && window.TaskMaster && (
+          <TaskMaster onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'study-rewards' && window.StudyRewards && (
+          <StudyRewards onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'knowledge-tree' && window.KnowledgeTree && (
+          <KnowledgeTree onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-timer' && window.StudyTimer && (
+          <StudyTimer onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'subject-dashboard' && window.SubjectDashboard && (
+          <SubjectDashboard onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'motivational-widget' && window.MotivationalWidget && (
+          <MotivationalWidget onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'study-log' && window.StudyLog && (
+          <StudyLog onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'achievement-system' && window.AchievementSystem && (
+          <AchievementSystem onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'focus-mode' && window.FocusMode && (
+          <FocusMode onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'assignment-tracker' && window.AssignmentTracker && (
+          <AssignmentTracker onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'grade-tracker' && window.GradeTracker && (
+          <GradeTracker onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'habit-builder' && window.HabitBuilder && (
+          <HabitBuilder onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'session-review' && window.SessionReview && (
+          <SessionReview onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-checklist' && window.StudyChecklist && (
+          <StudyChecklist onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'quick-stats-widget' && window.QuickStats && (
+          <QuickStats onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'weekly-overview' && window.WeeklyOverview && (
+          <WeeklyOverview onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'daily-goals' && window.DailyGoals && (
+          <DailyGoals onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'productivity-tracker' && window.ProductivityTracker && (
+          <ProductivityTracker onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'topic-explorer' && window.TopicExplorer && (
+          <TopicExplorer onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'study-spotlight' && window.StudySpotlight && (
+          <StudySpotlight onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'resource-library' && window.ResourceLibrary && (
+          <ResourceLibrary onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-insights' && window.StudyInsights && (
+          <StudyInsights onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'daily-reflection' && window.DailyReflection && (
+          <DailyReflection onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'focus-music-player' && window.FocusMusicPlayer && (
+          <FocusMusicPlayer onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'exam-tips-view' && window.ExamTips && (
+          <ExamTips onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'learning-journey' && window.LearningJourney && (
+          <LearningJourney onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'progress-card' && window.ProgressCard && (
+          <ProgressCard onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'course-card' && window.CourseCard && (
+          <CourseCard onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'focus-playlist' && window.FocusPlaylist && (
+          <FocusPlaylist onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'brain-dump' && window.BrainDump && (
+          <BrainDump onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'pomodoro-widget' && window.PomodoroWidget && (
+          <PomodoroWidget onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'daily-quote-view' && window.DailyQuote && (
+          <DailyQuote onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'quick-links-view' && window.QuickLinks && (
+          <QuickLinks onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'focus-session' && window.FocusSession && (
+          <FocusSession onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'mini-games' && window.MiniGames && (
+          <MiniGames onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-calendar' && window.StudyCalendar && (
+          <StudyCalendar onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-reminder' && window.StudyReminder && (
+          <StudyReminder onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'subject-progress' && window.SubjectProgress && (
+          <SubjectProgress onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'learning-stats' && window.LearningStats && (
+          <LearningStats onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'memory-game' && window.MemoryGame && (
+          <MemoryGame onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'math-sprint' && window.MathSprint && (
+          <MathSprint onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'word-scramble' && window.WordScramble && (
+          <WordScramble onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'study-budget' && window.StudyBudget && (
+          <StudyBudget onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'focus-widget' && window.FocusWidget && (
+          <FocusWidget onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'quick-notes-2' && window.QuickNotes2 && (
+          <QuickNotes2 onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'flashcard-study' && window.FlashcardStudy && (
+          <FlashcardStudy onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-spot-map' && window.StudySpotMap && (
+          <StudySpotMap onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-goals-view' && window.StudyGoals && (
+          <StudyGoals onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'daily-challenge' && window.DailyChallenge && (
+          <DailyChallenge onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-planner-2' && window.StudyPlanner2 && (
+          <StudyPlanner2 onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'exam-scheduler' && window.ExamScheduler && (
+          <ExamScheduler onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'progress-report' && window.ProgressReport && (
+          <ProgressReport onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-analytics' && window.StudyAnalytics && (
+          <StudyAnalytics onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'motivational-banner' && window.MotivationalBanner && (
+          <MotivationalBanner onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'learning-path' && window.LearningPath && (
+          <LearningPath onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-achievements' && window.StudyAchievements && (
+          <StudyAchievements onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'session-timer' && window.SessionTimer && (
+          <SessionTimer onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'weekly-progress' && window.WeeklyProgress && (
+          <WeeklyProgress onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'course-catalog-2' && window.CourseCatalog2 && (
+          <CourseCatalog2 onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-schedule' && window.StudySchedule && (
+          <StudySchedule onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'quick-quiz-2' && window.QuickQuiz2 && (
+          <QuickQuiz2 onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'todo-list' && window.TodoList && (
+          <TodoList onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'countdown-timer' && window.CountdownTimer && (
+          <CountdownTimer onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'note-taker' && window.NoteTaker && (
+          <NoteTaker onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'flashcard-practice' && window.FlashcardPractice && (
+          <FlashcardPractice onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-streak-2' && window.StudyStreak2 && (
+          <StudyStreak2 onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'habit-tracker-2' && window.HabitTracker2 && (
+          <HabitTracker2 onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'pomodoro-2' && window.Pomodoro2 && (
+          <Pomodoro2 onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'quick-quote' && window.QuickQuote && (
+          <QuickQuote onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'learning-card' && window.LearningCard && (
+          <LearningCard onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-timer-2' && window.StudyTimer2 && (
+          <StudyTimer2 onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'focus-mode-2' && window.FocusMode2 && (
+          <FocusMode2 onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'daily-insight' && window.DailyInsight && (
+          <DailyInsight onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'time-tracker' && window.TimeTracker && (
+          <TimeTracker onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'quick-math' && window.QuickMath && (
+          <QuickMath onBack={() => handleNavigate('dashboard')} showToast={showToast} />
+        )}
+
+        {currentView === 'study-card' && window.StudyCard && (
+          <StudyCard onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'daily-motiv' && window.DailyMotiv && (
+          <DailyMotiv onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'study-widget' && window.StudyWidget && (
+          <StudyWidget onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'quick-timer' && window.QuickTimer && (
+          <QuickTimer onBack={() => handleNavigate('dashboard')} />
+        )}
+
+        {currentView === 'focus-list' && window.FocusList && (
+          <FocusList onBack={() => handleNavigate('dashboard')} />
+        )}
+
+          -->
+        )}
+
+          </>
+        )}
+
           </>
         )}
       </main>

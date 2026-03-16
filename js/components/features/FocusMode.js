@@ -1,77 +1,104 @@
-const FocusMode = ({ isActive, onClose, children }) => {
-  const isMobile = window.innerWidth <= 768;
-  
-  if (!isActive) return null;
+const FocusMode = ({ onBack, showToast }) => {
+  const [enabled, setEnabled] = React.useState(false);
+  const [distractions, setDistractions] = React.useState(0);
+  const [sessionStart, setSessionStart] = React.useState(null);
+  const [elapsed, setElapsed] = React.useState(0);
+
+  React.useEffect(() => {
+    let interval;
+    if (enabled && sessionStart) {
+      interval = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - sessionStart) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [enabled, sessionStart]);
+
+  const formatTime = (s) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  const toggleFocus = () => {
+    if (!enabled) {
+      setSessionStart(Date.now());
+      setElapsed(0);
+      setDistractions(0);
+      showToast?.('Focus mode activated - Stay focused!', 'info');
+    } else {
+      showToast?.(`Focus session: ${formatTime(elapsed)}`, 'success');
+    }
+    setEnabled(!enabled);
+  };
+
+  const addDistraction = () => {
+    if (enabled) {
+      setDistractions(d => d + 1);
+      showToast?.('Distraction logged - Stay focused!', 'error');
+    }
+  };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'var(--bg-primary)',
-      zIndex: 9999,
-      overflow: 'auto'
-    }}>
-      {/* Minimal Header */}
-      <div style={{
-        position: 'sticky',
-        top: 0,
-        background: 'var(--bg-secondary)',
-        borderBottom: '1px solid var(--border-color)',
-        padding: '12px 20px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '20px' }}>🎯</span>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>
-            Focus Mode
-          </span>
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>Focus Mode</h1>
+      </header>
+
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <div style={{ fontSize: '80px', marginBottom: '20px' }}>{enabled ? '🎯' : '👀'}</div>
+        
+        <div style={{ fontSize: '56px', fontWeight: 'bold', color: enabled ? '#6366f1' : '#9ca3af', marginBottom: '10px' }}>
+          {formatTime(elapsed)}
         </div>
+        
+        <p style={{ color: '#6b7280', marginBottom: '30px' }}>
+          {enabled ? 'Stay focused! You can do this.' : 'Ready to focus?'}
+        </p>
+
         <button
-          onClick={onClose}
+          onClick={toggleFocus}
           style={{
-            background: 'var(--bg-tertiary)',
+            padding: '20px 60px',
+            fontSize: '20px',
             border: 'none',
-            padding: '8px 16px',
-            borderRadius: '8px',
+            borderRadius: '30px',
+            background: enabled ? '#ef4444' : '#6366f1',
+            color: 'white',
             cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: '600',
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
+            fontWeight: 'bold',
+            marginBottom: '30px'
           }}
         >
-          <Icon name="x" size={16} />
-          Exit Focus
+          {enabled ? 'End Session' : 'Start Focus'}
         </button>
-      </div>
 
-      {/* Content */}
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: isMobile ? '20px' : '40px'
-      }}>
-        {children}
-      </div>
+        {enabled && (
+          <div style={{ background: '#fef2f2', padding: '20px', borderRadius: '15px', marginBottom: '20px' }}>
+            <button
+              onClick={addDistraction}
+              style={{ background: '#fee2e2', border: 'none', padding: '10px 20px', borderRadius: '10px', color: '#ef4444', cursor: 'pointer' }}
+            >
+              + Log Distraction
+            </button>
+            <div style={{ marginTop: '10px', fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>
+              {distractions} distractions
+            </div>
+          </div>
+        )}
 
-      {/* Keyboard hint */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'var(--bg-secondary)',
-        padding: '8px 16px',
-        borderRadius: '8px',
-        fontSize: '12px',
-        color: 'var(--text-tertiary)',
-        border: '1px solid var(--border-color)'
-      }}>
-        Press Esc to exit focus mode
+        <div className="tips" style={{ background: 'white', padding: '20px', borderRadius: '15px', textAlign: 'left' }}>
+          <h3 style={{ marginBottom: '15px' }}>Focus Tips</h3>
+          <ul style={{ color: '#6b7280', paddingLeft: '20px', lineHeight: '1.8' }}>
+            <li>Put your phone on silent</li>
+            <li>Clear your workspace</li>
+            <li>Set a clear goal</li>
+            <li>Take breaks every 25 minutes</li>
+            <li>Stay hydrated</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

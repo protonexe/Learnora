@@ -1,26 +1,56 @@
-const TopicExplorer = ({ onClose }) => {
-  const topics = [
-    {name:'Calculus',courses:12,icon:'📐'},
-    {name:'Physics',courses:8,icon:'⚛️'},
-    {name:'Chemistry',courses:6,icon:'🧪'},
-    {name:'Biology',courses:10,icon:'🧬'},
-  ];
+const TopicExplorer = ({ onBack, showToast }) => {
+  const [subjects] = React.useState({
+    'Mathematics': ['Calculus', 'Algebra', 'Geometry', 'Statistics', 'Trigonometry'],
+    'Physics': ['Mechanics', 'Thermodynamics', 'Optics', 'Electromagnetism', 'Quantum'],
+    'Chemistry': ['Organic', 'Inorganic', 'Physical', 'Analytical', 'Biochemistry'],
+    'Biology': ['Anatomy', 'Genetics', 'Ecology', 'Physiology', 'Molecular'],
+    'History': ['World', 'American', 'European', 'Ancient', 'Modern'],
+    'English': ['Literature', 'Grammar', 'Writing', 'Vocabulary', 'Poetry']
+  });
+
+  const [selectedSubject, setSelectedSubject] = React.useState(null);
 
   return (
-    <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'var(--bg-primary)',zIndex:1000,overflow:'auto'}}>
-      <div style={{background:'var(--bg-secondary)',borderBottom:'1px solid var(--border-color)',padding:'16px 20px',display:'flex',alignItems:'center',gap:12}}>
-        <button onClick={onClose} style={{padding:'8px 12px',borderRadius:8,border:'none',background:'var(--bg)',color:'var(--text-primary)',cursor:'pointer'}}>← Back</button>
-        <h2 style={{margin:0,fontSize:20}}>🔍 Explore Topics</h2>
-      </div>
-      <div style={{padding:20,display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
-        {topics.map((t,i)=>(
-          <div key={i} style={{background:'var(--bg-secondary)',borderRadius:12,padding:16,border:'1px solid var(--border-color)',textAlign:'center',cursor:'pointer'}}>
-            <div style={{fontSize:32,marginBottom:8}}>{t.icon}</div>
-            <div style={{fontSize:14,fontWeight:600,color:'var(--text-primary)'}}>{t.name}</div>
-            <div style={{fontSize:12,color:'var(--text-secondary)'}}>{t.courses} courses</div>
-          </div>
-        ))}
+    <div className="view-container">
+      <header className="view-header">
+        <button className="back-btn" onClick={onBack}>←</button>
+        <h1>Topic Explorer</h1>
+      </header>
+
+      <div style={{ padding: '20px' }}>
+        {!selectedSubject ? (
+          <>
+            <p style={{ color: '#6b7280', marginBottom: '20px' }}>Select a subject to explore topics</p>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {Object.entries(subjects).map(([subject, topics]) => (
+                <div key={subject} onClick={() => setSelectedSubject(subject)} style={{ background: 'white', padding: '20px', borderRadius: '15px', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+                  <div style={{ fontWeight: '600', color: '#1f2937', marginBottom: '8px' }}>{subject}</div>
+                  <div style={{ fontSize: '13px', color: '#6b7280' }}>{topics.length} topics</div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <button onClick={() => setSelectedSubject(null)} style={{ marginBottom: '20px', padding: '10px 20px', background: '#f3f4f6', border: 'none', borderRadius: '10px', cursor: 'pointer' }}>
+              ← Back to Subjects
+            </button>
+            <h2 style={{ marginBottom: '20px', color: '#1f2937' }}>{selectedSubject}</h2>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {subjects[selectedSubject].map((topic, i) => (
+                <div key={i} style={{ background: 'white', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                  <span style={{ fontWeight: '500', color: '#1f2937' }}>{topic}</span>
+                  <button onClick={() => showToast?.(`Started learning ${topic}!`, 'success')} style={{ padding: '8px 16px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
+                    Start
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 };
+
+window.TopicExplorer = TopicExplorer;
