@@ -150,6 +150,12 @@ Connect your GitHub repository. No build command needed - set the publish direct
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and development process.
 
+## AI Disclosure
+
+AI was used in the making of this project to assist with development.
+
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
